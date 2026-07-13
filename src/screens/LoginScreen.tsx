@@ -12,8 +12,8 @@ import {
   Dimensions,
 } from 'react-native';
 import { COLORS, SPACING, SIZES, SHADOWS } from '../constants/theme';
-import { useAppDispatch } from '../store/hooks';
-import { login } from '../store/authSlice';
+import { useAppDispatch } from '../redux/hooks';
+import { login } from '../redux/features/auth/authSlice';
 
 const { width } = Dimensions.get('window');
 
@@ -65,12 +65,12 @@ export default function LoginScreen() {
     if (isEmailValid && isPasswordValid) {
       // Perform simple mock credentials check for demonstration
       if (email.toLowerCase() === 'admin@bazar.com' && password === '123456') {
-        dispatch(login(email));
+        dispatch(login({ email, token: 'mock-jwt-token' }));
       } else {
         // Fallback: let them login anyway, but show brief success or custom info
         // For development convenience, if they input anything valid, let them log in,
         // but if it's incorrect test credentials, show alert but allow demo bypass or standard flow.
-        dispatch(login(email));
+        dispatch(login({ email, token: 'mock-jwt-token' }));
       }
     }
   };

@@ -1,4 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { RootState } from '../../store';
+
 
 export interface BazarItem {
   id: string;
@@ -8,12 +10,12 @@ export interface BazarItem {
   date: string;
 }
 
-interface LedgerState {
+type TLedgerState = {
   totalBudget: number;
   items: BazarItem[];
-}
+};
 
-const initialState: LedgerState = {
+const initialState: TLedgerState = {
   totalBudget: 15000,
   items: [
     { id: '1', title: 'Rice & Lentils (Monthly)', amount: 1850, category: 'Groceries', date: 'Today, 9:30 AM' },
@@ -41,3 +43,7 @@ const ledgerSlice = createSlice({
 
 export const { addItem, deleteItem, updateBudget } = ledgerSlice.actions;
 export default ledgerSlice.reducer;
+
+// Selectors matching letanest style
+export const currentTotalBudget = (state: RootState) => state.ledger.totalBudget;
+export const currentLedgerItems = (state: RootState) => state.ledger.items;

@@ -12,14 +12,15 @@ import {
   Alert,
 } from 'react-native';
 import { COLORS, SPACING, SIZES, SHADOWS } from '../constants/theme';
-import { useAppDispatch, useAppSelector } from '../store/hooks';
-import { logout } from '../store/authSlice';
-import { addItem, BazarItem } from '../store/ledgerSlice';
+import { useAppDispatch, useAppSelector } from '../redux/hooks';
+import { logout, currentUserEmail } from '../redux/features/auth/authSlice';
+import { addItem, BazarItem, currentTotalBudget, currentLedgerItems } from '../redux/features/ledger/ledgerSlice';
 
 export default function HomeScreen() {
   const dispatch = useAppDispatch();
-  const { totalBudget, items } = useAppSelector((state) => state.ledger);
-  const { userEmail } = useAppSelector((state) => state.auth);
+  const totalBudget = useAppSelector(currentTotalBudget);
+  const items = useAppSelector(currentLedgerItems);
+  const userEmail = useAppSelector(currentUserEmail);
 
   // Modal & Form States
   const [isModalVisible, setIsModalVisible] = useState(false);
