@@ -12,29 +12,14 @@ import {
   Alert,
 } from 'react-native';
 import { COLORS, SPACING, SIZES, SHADOWS } from '../constants/theme';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { logout } from '../store/authSlice';
+import { addItem, BazarItem } from '../store/ledgerSlice';
 
-interface HomeScreenProps {
-  userEmail: string;
-  onLogout: () => void;
-}
-
-interface BazarItem {
-  id: string;
-  title: string;
-  amount: number;
-  category: string;
-  date: string;
-}
-
-export default function HomeScreen({ userEmail, onLogout }: HomeScreenProps) {
-  // Budget States
-  const [totalBudget] = useState(15000);
-  const [items, setItems] = useState<BazarItem[]>([
-    { id: '1', title: 'Rice & Lentils (Monthly)', amount: 1850, category: 'Groceries', date: 'Today, 9:30 AM' },
-    { id: '2', title: 'Fresh Fish & Chicken', amount: 950, category: 'Bazar', date: 'Yesterday, 6:00 PM' },
-    { id: '3', title: 'Organic Vegetables & Spices', amount: 340, category: 'Bazar', date: 'July 11, 8:15 AM' },
-    { id: '4', title: 'Home LED Bulbs (x2)', amount: 450, category: 'Utilities', date: 'July 10, 4:30 PM' },
-  ]);
+export default function HomeScreen() {
+  const dispatch = useAppDispatch();
+  const { totalBudget, items } = useAppSelector((state) => state.ledger);
+  const { userEmail } = useAppSelector((state) => state.auth);
 
   // Modal & Form States
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -65,7 +50,7 @@ export default function HomeScreen({ userEmail, onLogout }: HomeScreenProps) {
       date: 'Just now',
     };
 
-    setItems([newItem, ...items]);
+    dispatch(addItem(newItem));
     setNewItemTitle('');
     setNewItemAmount('');
     setIsModalVisible(false);
@@ -100,9 +85,9 @@ export default function HomeScreen({ userEmail, onLogout }: HomeScreenProps) {
       <View style={styles.header}>
         <View>
           <Text style={styles.greetingText}>Assalamu Alaikum,</Text>
-          <Text style={styles.userText}>{userEmail.split('@')[0]}</Text>
+          <Text style={styles.userText}>{(userEmail || '').split('@')[0]}</Text>
         </View>
-        <TouchableOpacity style={styles.logoutButton} onPress={onLogout}>
+        <TouchableOpacity style={styles.logoutButton} onPress={() => dispatch(logout())}>
           <Text style={styles.logoutButtonText}>Log Out</Text>
         </TouchableOpacity>
       </View>

@@ -12,14 +12,13 @@ import {
   Dimensions,
 } from 'react-native';
 import { COLORS, SPACING, SIZES, SHADOWS } from '../constants/theme';
+import { useAppDispatch } from '../store/hooks';
+import { login } from '../store/authSlice';
 
 const { width } = Dimensions.get('window');
 
-interface LoginScreenProps {
-  onLoginSuccess: (email: string) => void;
-}
-
-export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
+export default function LoginScreen() {
+  const dispatch = useAppDispatch();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   
@@ -66,12 +65,12 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
     if (isEmailValid && isPasswordValid) {
       // Perform simple mock credentials check for demonstration
       if (email.toLowerCase() === 'admin@bazar.com' && password === '123456') {
-        onLoginSuccess(email);
+        dispatch(login(email));
       } else {
         // Fallback: let them login anyway, but show brief success or custom info
         // For development convenience, if they input anything valid, let them log in,
         // but if it's incorrect test credentials, show alert but allow demo bypass or standard flow.
-        onLoginSuccess(email);
+        dispatch(login(email));
       }
     }
   };

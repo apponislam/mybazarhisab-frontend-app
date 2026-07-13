@@ -1,50 +1,48 @@
 import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { Provider } from 'react-redux';
+import { store } from './src/store';
+import { useAppSelector } from './src/store/hooks';
 import { COLORS } from './src/constants/theme';
 import SplashScreen from './src/screens/SplashScreen';
 import LoginScreen from './src/screens/LoginScreen';
 import HomeScreen from './src/screens/HomeScreen';
 
-type ScreenType = 'splash' | 'login' | 'home';
-
-function App() {
-  const [currentScreen, setCurrentScreen] = useState<ScreenType>('splash');
-  const [userEmail, setUserEmail] = useState('');
+function AppContent() {
+  const [showSplash, setShowSplash] = useState(true);
+  const { isLoggedIn, userEmail } = useAppSelector((state) => state.auth);
 
   const handleSplashFinish = () => {
-    setCurrentScreen('login');
-  };
-
-  const handleLoginSuccess = (email: string) => {
-    setUserEmail(email);
-    setCurrentScreen('home');
-  };
-
-  const handleLogout = () => {
-    setUserEmail('');
-    setCurrentScreen('login');
+    setShowSplash(false);
   };
 
   const renderScreen = () => {
-    switch (currentScreen) {
-      case 'splash':
-        return <SplashScreen onFinish={handleSplashFinish} />;
-      case 'login':
-        return <LoginScreen onLoginSuccess={handleLoginSuccess} />;
-      case 'home':
-        return <HomeScreen userEmail={userEmail} onLogout={handleLogout} />;
-      default:
-        return <SplashScreen onFinish={handleSplashFinish} />;
+    if (showSplash) {
+      return <SplashScreen onFinish={handleSplashFinish} />;
     }
+    
+    if (isLoggedIn && userEmail) {
+      return <HomeScreen />;
+    }
+
+    return <LoginScreen />;
   };
 
   return (
-    <SafeAreaProvider>
-      <View style={styles.container}>
-        {renderScreen()}
-      </View>
-    </SafeAreaProvider>
+    <View style={styles.container}>
+      {renderScreen()}
+    </View>
+  );
+}
+
+function App() {
+  return (
+    <Provider store={store}>
+      <SafeAreaProvider>
+        <AppContent />
+      </SafeAreaProvider>
+    </Provider>
   );
 }
 
