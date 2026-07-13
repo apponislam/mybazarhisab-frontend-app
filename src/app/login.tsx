@@ -21,7 +21,7 @@ export default function LoginScreen() {
 
   const handleLogin = () => {
     // TODO: wire up backend auth
-    router.replace('/(tabs)');
+    router.replace('/(tabs)/index');
   };
 
   return (

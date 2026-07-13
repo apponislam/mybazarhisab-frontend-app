@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Platform } from 'react-native';
+import { Platform, Text } from 'react-native';
 
 import { useTheme } from '@/hooks/use-theme';
 
@@ -33,8 +33,8 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color, size }) => (
-            <TabBarIcon name="🏠" size={size} />
+          tabBarIcon: ({ size }) => (
+            <Text style={{ fontSize: size - 4 }}>🏠</Text>
           ),
         }}
       />
@@ -42,8 +42,8 @@ export default function TabLayout() {
         name="bills"
         options={{
           title: 'Bills',
-          tabBarIcon: ({ color, size }) => (
-            <TabBarIcon name="🧾" size={size} />
+          tabBarIcon: ({ size }) => (
+            <Text style={{ fontSize: size - 4 }}>🧾</Text>
           ),
         }}
       />
@@ -51,25 +51,11 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ color, size }) => (
-            <TabBarIcon name="👤" size={size} />
+          tabBarIcon: ({ size }) => (
+            <Text style={{ fontSize: size - 4 }}>👤</Text>
           ),
         }}
       />
     </Tabs>
-  );
-}
-
-/**
- * Simple emoji-based tab icon.
- * TODO: Replace with proper icon library (e.g. @expo/vector-icons).
- */
-function TabBarIcon({ name, size }: { name: string; size: number }) {
-  return (
-    <android.widget.TextView
-      style={{ fontSize: size - 4, textAlign: 'center' }}
-    >
-      {name}
-    </android.widget.TextView>
   );
 }
