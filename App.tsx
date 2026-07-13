@@ -1,44 +1,57 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
+import React, { useState } from 'react';
+import { StyleSheet, View } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { COLORS } from './src/constants/theme';
+import SplashScreen from './src/screens/SplashScreen';
+import LoginScreen from './src/screens/LoginScreen';
+import HomeScreen from './src/screens/HomeScreen';
 
-import { NewAppScreen } from '@react-native/new-app-screen';
-import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
-import {
-  SafeAreaProvider,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+type ScreenType = 'splash' | 'login' | 'home';
 
 function App() {
-  const isDarkMode = useColorScheme() === 'dark';
+  const [currentScreen, setCurrentScreen] = useState<ScreenType>('splash');
+  const [userEmail, setUserEmail] = useState('');
+
+  const handleSplashFinish = () => {
+    setCurrentScreen('login');
+  };
+
+  const handleLoginSuccess = (email: string) => {
+    setUserEmail(email);
+    setCurrentScreen('home');
+  };
+
+  const handleLogout = () => {
+    setUserEmail('');
+    setCurrentScreen('login');
+  };
+
+  const renderScreen = () => {
+    switch (currentScreen) {
+      case 'splash':
+        return <SplashScreen onFinish={handleSplashFinish} />;
+      case 'login':
+        return <LoginScreen onLoginSuccess={handleLoginSuccess} />;
+      case 'home':
+        return <HomeScreen userEmail={userEmail} onLogout={handleLogout} />;
+      default:
+        return <SplashScreen onFinish={handleSplashFinish} />;
+    }
+  };
 
   return (
     <SafeAreaProvider>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <AppContent />
+      <View style={styles.container}>
+        {renderScreen()}
+      </View>
     </SafeAreaProvider>
-  );
-}
-
-function AppContent() {
-  const safeAreaInsets = useSafeAreaInsets();
-
-  return (
-    <View style={styles.container}>
-      <NewAppScreen
-        templateFileName="App.tsx"
-        safeAreaInsets={safeAreaInsets}
-      />
-    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: COLORS.background,
   },
 });
 
