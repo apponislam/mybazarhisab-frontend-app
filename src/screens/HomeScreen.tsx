@@ -3,226 +3,362 @@ import {
   StyleSheet,
   View,
   Text,
-  FlatList,
   TouchableOpacity,
   SafeAreaView,
   StatusBar,
-  TextInput,
-  Modal,
-  Alert,
+  Dimensions,
+  Platform,
 } from 'react-native';
 import { COLORS, SPACING, SIZES, SHADOWS } from '../constants/theme';
-import { useAppDispatch, useAppSelector } from '../redux/hooks';
-import { logout, currentUserEmail } from '../redux/features/auth/authSlice';
-import { addItem, BazarItem, currentTotalBudget, currentLedgerItems } from '../redux/features/ledger/ledgerSlice';
+
+// Custom icons & components
+import { BookOpen, ShoppingBag, Calendar, User, Plus } from '../components/CustomIcon';
+import AddPicker from '../components/AddPicker';
+
+// Screens & Tabs
+import GroupPickerScreen, { GroupStats } from './GroupPickerScreen';
+import HomeTab from './HomeTab';
+import ExpensesTab, { MockBazarEntry, MockUser, MockProduct } from './ExpensesTab';
+import BillsTab, { MockBill } from './BillsTab';
+import ProfileTab from './ProfileTab';
+import AddExpenseScreen from './AddExpenseScreen';
+import AddBillScreen from './AddBillScreen';
+import ExpenseDetailScreen from './ExpenseDetailScreen';
+import ExpenseEditScreen from './ExpenseEditScreen';
+import BillDetailScreen from './BillDetailScreen';
+import BillEditScreen from './BillEditScreen';
+import EditProfileScreen from './EditProfileScreen';
+import ChangePasswordScreen from './ChangePasswordScreen';
+
+const { width } = Dimensions.get('window');
+
+// ─── Initial Mock Data ────────────────────────────────────────────────────────
+const MOCK_USERS: MockUser[] = [
+  { id: 'u1', name: 'Ahmed Hassan', email: 'ahmed@email.com', phone: '+880 1711 234567' },
+  { id: 'u2', name: 'Fatima Begum', email: 'fatima@email.com', phone: '+880 1812 345678' },
+  { id: 'u3', name: 'Karim Uddin', email: 'karim@email.com', phone: '+880 1913 456789' },
+  { id: 'u4', name: 'Rahima Khatun', email: 'rahima@email.com', phone: '+880 1614 567890' },
+];
+
+const MOCK_PRODUCTS: MockProduct[] = [
+  { id: 'p1', name: 'Onion', emoji: '🧅' },
+  { id: 'p2', name: 'Potato', emoji: '🥔' },
+  { id: 'p3', name: 'Tomato', emoji: '🍅' },
+  { id: 'p4', name: 'Rice (Miniket)', emoji: '🌾' },
+  { id: 'p5', name: 'Hilsha Fish', emoji: '🐟' },
+  { id: 'p6', name: 'Chicken', emoji: '🍗' },
+  { id: 'p7', name: 'Eggs', emoji: '🥚' },
+  { id: 'p8', name: 'Soybean Oil', emoji: '🫙' },
+  { id: 'p9', name: 'Garlic', emoji: '🧄' },
+  { id: 'p10', name: 'Lentils (Dal)', emoji: '🫘' },
+];
+
+const INITIAL_ENTRIES: MockBazarEntry[] = [
+  { id: 'e1', product: MOCK_PRODUCTS[4], price: 480, quantity: 1, unit: 'KG', date: 'July 12, 10:15 AM', notes: 'Fresh from Karwan Bazar', user: MOCK_USERS[0] },
+  { id: 'e2', product: MOCK_PRODUCTS[3], price: 70, quantity: 5, unit: 'KG', date: 'July 12, 09:30 AM', user: MOCK_USERS[1] },
+  { id: 'e3', product: MOCK_PRODUCTS[0], price: 55, quantity: 2, unit: 'KG', date: 'July 11, 06:45 PM', user: MOCK_USERS[2] },
+  { id: 'e4', product: MOCK_PRODUCTS[5], price: 220, quantity: 1.5, unit: 'KG', date: 'July 11, 11:20 AM', notes: 'Country chicken', user: MOCK_USERS[0] },
+  { id: 'e5', product: MOCK_PRODUCTS[6], price: 145, quantity: 12, unit: 'PIECE', date: 'July 10, 08:30 AM', user: MOCK_USERS[3] },
+  { id: 'e6', product: MOCK_PRODUCTS[7], price: 185, quantity: 2, unit: 'PIECE', date: 'July 10, 04:00 PM', notes: '5L bottle', user: MOCK_USERS[1] },
+  { id: 'e7', product: MOCK_PRODUCTS[2], price: 60, quantity: 1, unit: 'KG', date: 'June 25, 11:15 AM', user: MOCK_USERS[2] },
+  { id: 'e8', product: MOCK_PRODUCTS[9], price: 110, quantity: 500, unit: 'GM', date: 'June 22, 05:30 PM', user: MOCK_USERS[0] },
+  { id: 'e9', product: MOCK_PRODUCTS[1], price: 40, quantity: 3, unit: 'KG', date: 'June 18, 08:15 AM', user: MOCK_USERS[3] },
+  { id: 'e10', product: MOCK_PRODUCTS[8], price: 30, quantity: 250, unit: 'GM', date: 'June 15, 06:12 PM', notes: 'Local market', user: MOCK_USERS[1] },
+];
+
+const INITIAL_BILLS: MockBill[] = [
+  { id: 'b1', user: MOCK_USERS[0], category: 'RENT', title: 'House Rent', amount: 18000, date: 'July 5, 2026', notes: 'Paid to landlord Alam saheb' },
+  { id: 'b2', user: MOCK_USERS[1], category: 'WIFI', title: 'Grameenphone Broadband', amount: 1200, date: 'July 3, 2026' },
+  { id: 'b3', user: MOCK_USERS[2], category: 'ELECTRICITY', title: 'DESCO Bill', amount: 2400, date: 'July 8, 2026', notes: 'AC usage high' },
+  { id: 'b4', user: MOCK_USERS[0], category: 'GAS', title: 'Titas Gas Bill', amount: 950, date: 'July 7, 2026' },
+  { id: 'b5', user: MOCK_USERS[3], category: 'MAID', title: 'House Maid Salary', amount: 3500, date: 'July 1, 2026' },
+  { id: 'b6', user: MOCK_USERS[1], category: 'MOBILE', title: 'Robi Recharge', amount: 500, date: 'July 6, 2026' },
+  { id: 'b7', user: MOCK_USERS[2], category: 'MEDICAL', title: 'Square Hospital Visit', amount: 1800, date: 'June 20, 2026', notes: 'Dr. Rahman consultation' },
+  { id: 'b8', user: MOCK_USERS[0], category: 'SUBSCRIPTION', title: 'Netflix Monthly', amount: 399, date: 'June 2, 2026' },
+];
+
+type AppTabType = 'home' | 'expenses' | 'bills' | 'profile';
+type AppSubScreenType =
+  | null
+  | 'add-picker'
+  | 'add-expense'
+  | 'add-bill'
+  | 'expense-detail'
+  | 'expense-edit'
+  | 'bill-detail'
+  | 'bill-edit'
+  | 'profile-edit'
+  | 'profile-change-password';
 
 export default function HomeScreen() {
-  const dispatch = useAppDispatch();
-  const totalBudget = useAppSelector(currentTotalBudget);
-  const items = useAppSelector(currentLedgerItems);
-  const userEmail = useAppSelector(currentUserEmail);
+  // Navigation & Screen states
+  const [groupStats, setGroupStats] = useState<GroupStats | null>(null);
+  const [tab, setTab] = useState<AppTabType>('home');
+  const [subScreen, setSubScreen] = useState<AppSubScreenType>(null);
+  const [showAddPicker, setShowAddPicker] = useState(false);
 
-  // Modal & Form States
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [newItemTitle, setNewItemTitle] = useState('');
-  const [newItemAmount, setNewItemAmount] = useState('');
-  const [newItemCategory, setNewItemCategory] = useState('Bazar');
+  // Lists state
+  const [entries, setEntries] = useState<MockBazarEntry[]>(INITIAL_ENTRIES);
+  const [bills, setBills] = useState<MockBill[]>(INITIAL_BILLS);
 
-  // Calculations
-  const totalExpense = items.reduce((acc, curr) => acc + curr.amount, 0);
-  const remainingBudget = totalBudget - totalExpense;
+  // Selected Detail states
+  const [selectedEntry, setSelectedEntry] = useState<MockBazarEntry | null>(null);
+  const [selectedBill, setSelectedBill] = useState<MockBill | null>(null);
 
-  const handleAddItem = () => {
-    if (!newItemTitle.trim()) {
-      Alert.alert('Error', 'Please enter an item name');
-      return;
-    }
-    const amountNum = parseFloat(newItemAmount);
-    if (isNaN(amountNum) || amountNum <= 0) {
-      Alert.alert('Error', 'Please enter a valid amount');
-      return;
-    }
+  // Helper calculation update to pass updated totals into Group stats dynamically
+  const calculateStats = (groupName: string): GroupStats => {
+    const totalBazar = entries.reduce((s, e) => s + e.price * e.quantity, 0);
+    const totalBill = bills.reduce((s, b) => s + b.amount, 0);
+    
+    // My Bazar entries
+    const myEntries = entries.filter((e) => e.user.id === 'u1');
+    const myBazarExpense = myEntries.reduce((s, e) => s + e.price * e.quantity, 0);
+    const myBillExpense = bills.filter((b) => b.user.id === 'u1').reduce((s, b) => s + b.amount, 0);
 
-    const newItem: BazarItem = {
-      id: Date.now().toString(),
-      title: newItemTitle.trim(),
-      amount: amountNum,
-      category: newItemCategory,
-      date: 'Just now',
+    return {
+      groupName,
+      totalMembers: 4,
+      totalGroupBazarEntries: entries.length,
+      totalMyBazarEntries: myEntries.length,
+      totalProductsCreatedByMe: 8,
+      thisMonthBazarExpense: totalBazar,
+      prevMonthBazarExpense: 10950,
+      thisYearBazarExpense: totalBazar + 85000,
+      prevYearBazarExpense: 87200,
+      thisMonthBillExpense: totalBill,
+      prevMonthBillExpense: 5100,
+      thisYearBillExpense: totalBill + 39000,
+      prevYearBillExpense: 39800,
+      thisMonthTotalExpense: totalBazar + totalBill,
+      prevMonthTotalExpense: 16050,
+      thisYearTotalExpense: totalBazar + totalBill + 124000,
+      prevYearTotalExpense: 127000,
     };
-
-    dispatch(addItem(newItem));
-    setNewItemTitle('');
-    setNewItemAmount('');
-    setIsModalVisible(false);
   };
 
-  const renderItem = ({ item }: { item: BazarItem }) => {
-    // Determine category indicator color
-    const catColor = item.category === 'Groceries' ? COLORS.primary :
-                     item.category === 'Bazar' ? COLORS.accent : COLORS.warning;
+  // Render Gate 1: Join/Create group selection
+  if (!groupStats) {
+    return <GroupPickerScreen onGroupReady={(s) => setGroupStats(s)} />;
+  }
 
+  // Get active stats object dynamically calculated
+  const activeStats = calculateStats(groupStats.groupName);
+
+  // Render Gate 2: Detail or Edit screens
+  if (subScreen === 'expense-detail' && selectedEntry) {
     return (
-      <View style={[styles.itemCard, SHADOWS.sm]}>
-        <View style={styles.itemLeft}>
-          <View style={[styles.categoryIndicator, { backgroundColor: catColor }]} />
-          <View>
-            <Text style={styles.itemTitle}>{item.title}</Text>
-            <Text style={styles.itemDetails}>{item.category} • {item.date}</Text>
-          </View>
-        </View>
-        <View style={styles.itemRight}>
-          <Text style={styles.itemAmount}>৳{item.amount.toLocaleString()}</Text>
-        </View>
-      </View>
+      <ExpenseDetailScreen
+        entry={selectedEntry}
+        onBack={() => {
+          setSelectedEntry(null);
+          setSubScreen(null);
+        }}
+        onEdit={() => setSubScreen('expense-edit')}
+        onDelete={() => {
+          setEntries((es) => es.filter((e) => e.id !== selectedEntry.id));
+          setSelectedEntry(null);
+          setSubScreen(null);
+        }}
+      />
     );
+  }
+
+  if (subScreen === 'expense-edit' && selectedEntry) {
+    return (
+      <ExpenseEditScreen
+        entry={selectedEntry}
+        onBack={() => setSubScreen('expense-detail')}
+        onSave={(updated) => {
+          setEntries((es) => es.map((e) => (e.id === updated.id ? updated : e)));
+          setSelectedEntry(updated);
+          setSubScreen('expense-detail');
+        }}
+      />
+    );
+  }
+
+  if (subScreen === 'bill-detail' && selectedBill) {
+    return (
+      <BillDetailScreen
+        bill={selectedBill}
+        onBack={() => {
+          setSelectedBill(null);
+          setSubScreen(null);
+        }}
+        onEdit={() => setSubScreen('bill-edit')}
+        onDelete={() => {
+          setBills((bs) => bs.filter((b) => b.id !== selectedBill.id));
+          setSelectedBill(null);
+          setSubScreen(null);
+        }}
+      />
+    );
+  }
+
+  if (subScreen === 'bill-edit' && selectedBill) {
+    return (
+      <BillEditScreen
+        bill={selectedBill}
+        onBack={() => setSubScreen('bill-detail')}
+        onSave={(updated) => {
+          setBills((bs) => bs.map((b) => (b.id === updated.id ? updated : b)));
+          setSelectedBill(updated);
+          setSubScreen('bill-detail');
+        }}
+      />
+    );
+  }
+
+  if (subScreen === 'add-expense') {
+    return (
+      <AddExpenseScreen
+        onBack={() => setSubScreen(null)}
+        onDone={(newEntry) => {
+          setEntries((es) => [newEntry, ...es]);
+          setSubScreen(null);
+          setTab('expenses');
+        }}
+      />
+    );
+  }
+
+  if (subScreen === 'add-bill') {
+    return (
+      <AddBillScreen
+        onBack={() => setSubScreen(null)}
+        onDone={(newBill) => {
+          setBills((bs) => [newBill, ...bs]);
+          setSubScreen(null);
+          setTab('bills');
+        }}
+      />
+    );
+  }
+
+  if (subScreen === 'profile-edit') {
+    return <EditProfileScreen onBack={() => setSubScreen(null)} />;
+  }
+
+  if (subScreen === 'profile-change-password') {
+    return <ChangePasswordScreen onBack={() => setSubScreen(null)} />;
+  }
+
+  // Render Gate 3: Standard tab dashboard view
+  const renderTabContent = () => {
+    switch (tab) {
+      case 'home':
+        return <HomeTab stats={activeStats} />;
+      case 'expenses':
+        return (
+          <ExpensesTab
+            entries={entries}
+            onDetail={(e) => {
+              setSelectedEntry(e);
+              setSubScreen('expense-detail');
+            }}
+          />
+        );
+      case 'bills':
+        return (
+          <BillsTab
+            bills={bills}
+            onDetail={(b) => {
+              setSelectedBill(b);
+              setSubScreen('bill-detail');
+            }}
+          />
+        );
+      case 'profile':
+        return (
+          <ProfileTab
+            onEditProfile={() => setSubScreen('profile-edit')}
+            onChangePassword={() => setSubScreen('profile-change-password')}
+          />
+        );
+      default:
+        return <HomeTab stats={activeStats} />;
+    }
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.background} />
       
-      {/* Top Header Row */}
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.greetingText}>Assalamu Alaikum,</Text>
-          <Text style={styles.userText}>{(userEmail || '').split('@')[0]}</Text>
+      {/* Central Screen Tab Content */}
+      <View style={styles.contentArea}>{renderTabContent()}</View>
+
+      {/* Bottom Custom Tab Bar */}
+      <View style={[styles.bottomTabBar, SHADOWS.lg]}>
+        {/* Home Tab */}
+        <TouchableOpacity
+          style={styles.tabBtn}
+          onPress={() => setTab('home')}
+          activeOpacity={0.7}
+        >
+          <BookOpen color={tab === 'home' ? COLORS.primary : COLORS.textSecondary} size={20} />
+          <Text style={[styles.tabLabelText, tab === 'home' && { color: COLORS.primary }]}>Home</Text>
+          {tab === 'home' && <View style={styles.activeDot} />}
+        </TouchableOpacity>
+
+        {/* Expenses Tab */}
+        <TouchableOpacity
+          style={styles.tabBtn}
+          onPress={() => setTab('expenses')}
+          activeOpacity={0.7}
+        >
+          <ShoppingBag color={tab === 'expenses' ? COLORS.primary : COLORS.textSecondary} size={20} />
+          <Text style={[styles.tabLabelText, tab === 'expenses' && { color: COLORS.primary }]}>Expenses</Text>
+          {tab === 'expenses' && <View style={styles.activeDot} />}
+        </TouchableOpacity>
+
+        {/* Central Plus ADD Button */}
+        <View style={styles.centerAddBtnContainer}>
+          <TouchableOpacity
+            style={styles.centerAddBtn}
+            onPress={() => setShowAddPicker(true)}
+            activeOpacity={0.8}
+          >
+            <Plus color={COLORS.background} size={24} />
+          </TouchableOpacity>
+          <Text style={styles.tabLabelText}>Add</Text>
         </View>
-        <TouchableOpacity style={styles.logoutButton} onPress={() => dispatch(logout())}>
-          <Text style={styles.logoutButtonText}>Log Out</Text>
+
+        {/* Bills Tab */}
+        <TouchableOpacity
+          style={styles.tabBtn}
+          onPress={() => setTab('bills')}
+          activeOpacity={0.7}
+        >
+          <Calendar color={tab === 'bills' ? COLORS.primary : COLORS.textSecondary} size={20} />
+          <Text style={[styles.tabLabelText, tab === 'bills' && { color: COLORS.primary }]}>Bills</Text>
+          {tab === 'bills' && <View style={styles.activeDot} />}
+        </TouchableOpacity>
+
+        {/* Profile Tab */}
+        <TouchableOpacity
+          style={styles.tabBtn}
+          onPress={() => setTab('profile')}
+          activeOpacity={0.7}
+        >
+          <User color={tab === 'profile' ? COLORS.primary : COLORS.textSecondary} size={20} />
+          <Text style={[styles.tabLabelText, tab === 'profile' && { color: COLORS.primary }]}>Profile</Text>
+          {tab === 'profile' && <View style={styles.activeDot} />}
         </TouchableOpacity>
       </View>
 
-      {/* Main Budget Dashboard Card */}
-      <View style={[styles.dashboardCard, SHADOWS.md]}>
-        <View style={styles.budgetMainRow}>
-          <View>
-            <Text style={styles.budgetLabel}>REMAINING LEDGER BUDGET</Text>
-            <Text style={[styles.budgetValue, { color: remainingBudget >= 0 ? COLORS.success : COLORS.error }]}>
-              ৳{remainingBudget.toLocaleString()}
-            </Text>
-          </View>
-          <View style={styles.badgeContainer}>
-            <Text style={styles.monthBadge}>July 2026</Text>
-          </View>
-        </View>
-
-        <View style={styles.divider} />
-
-        <View style={styles.statsRow}>
-          <View style={styles.statCol}>
-            <Text style={styles.statLabel}>Total Budget</Text>
-            <Text style={styles.statValue}>৳{totalBudget.toLocaleString()}</Text>
-          </View>
-          <View style={styles.statVerticalDivider} />
-          <View style={styles.statCol}>
-            <Text style={styles.statLabel}>Expenses</Text>
-            <Text style={[styles.statValue, { color: COLORS.accent }]}>৳{totalExpense.toLocaleString()}</Text>
-          </View>
-        </View>
-      </View>
-
-      {/* List Header */}
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Recent Items</Text>
-        <TouchableOpacity onPress={() => setIsModalVisible(true)} style={styles.addNewButton}>
-          <Text style={styles.addNewButtonText}>+ Add Item</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Ledger Items FlatList */}
-      <FlatList
-        data={items}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No items added yet. Click "+ Add Item" to start!</Text>
-          </View>
-        }
+      {/* Add entry Selection Overlay picker */}
+      <AddPicker
+        visible={showAddPicker}
+        onExpense={() => {
+          setShowAddPicker(false);
+          setSubScreen('add-expense');
+        }}
+        onBill={() => {
+          setShowAddPicker(false);
+          setSubScreen('add-bill');
+        }}
+        onClose={() => setShowAddPicker(false)}
       />
-
-      {/* Add Item Modal */}
-      <Modal
-        visible={isModalVisible}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setIsModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Add Bazar Item</Text>
-
-            {/* Input Name */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.modalLabel}>Item Name</Text>
-              <TextInput
-                style={styles.modalInput}
-                placeholder="e.g. Eggs and Potato"
-                placeholderTextColor={COLORS.placeholder}
-                value={newItemTitle}
-                onChangeText={setNewItemTitle}
-              />
-            </View>
-
-            {/* Input Amount */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.modalLabel}>Amount (৳)</Text>
-              <TextInput
-                style={styles.modalInput}
-                placeholder="e.g. 250"
-                placeholderTextColor={COLORS.placeholder}
-                value={newItemAmount}
-                onChangeText={setNewItemAmount}
-                keyboardType="numeric"
-              />
-            </View>
-
-            {/* Category Select */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.modalLabel}>Category</Text>
-              <View style={styles.categoryRow}>
-                {['Bazar', 'Groceries', 'Utilities'].map((cat) => (
-                  <TouchableOpacity
-                    key={cat}
-                    style={[
-                      styles.categoryTab,
-                      newItemCategory === cat && styles.categoryTabActive,
-                    ]}
-                    onPress={() => setNewItemCategory(cat)}
-                  >
-                    <Text
-                      style={[
-                        styles.categoryTabText,
-                        newItemCategory === cat && styles.categoryTabTextActive,
-                      ]}
-                    >
-                      {cat}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-
-            {/* Actions */}
-            <View style={styles.modalActions}>
-              <TouchableOpacity
-                style={[styles.modalBtn, styles.modalBtnCancel]}
-                onPress={() => setIsModalVisible(false)}
-              >
-                <Text style={styles.modalBtnCancelText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalBtn, styles.modalBtnSubmit]}
-                onPress={handleAddItem}
-              >
-                <Text style={styles.modalBtnSubmitText}>Add to List</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
     </SafeAreaView>
   );
 }
@@ -232,273 +368,54 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: SPACING.lg,
-    paddingTop: SPACING.md,
-    marginBottom: SPACING.lg,
+  contentArea: {
+    flex: 1,
   },
-  greetingText: {
+  bottomTabBar: {
+    height: 72,
+    backgroundColor: COLORS.surface,
+    borderTopWidth: 1.2,
+    borderTopColor: COLORS.border,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    paddingBottom: Platform.OS === 'ios' ? 10 : 6,
+  },
+  tabBtn: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: '100%',
+  },
+  tabLabelText: {
+    fontSize: 10,
+    fontWeight: '500',
     color: COLORS.textSecondary,
-    fontSize: SIZES.caption + 2,
-  },
-  userText: {
-    color: COLORS.text,
-    fontSize: SIZES.h3,
-    fontWeight: 'bold',
-    textTransform: 'capitalize',
-  },
-  logoutButton: {
-    paddingVertical: SPACING.sm,
-    paddingHorizontal: SPACING.md,
-    borderRadius: SIZES.radiusSm,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    backgroundColor: COLORS.surface,
-  },
-  logoutButtonText: {
-    color: COLORS.error,
-    fontSize: SIZES.caption + 1,
-    fontWeight: '600',
-  },
-  dashboardCard: {
-    backgroundColor: COLORS.surface,
-    borderRadius: SIZES.radiusLg,
-    marginHorizontal: SPACING.lg,
-    padding: SPACING.lg,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    marginBottom: SPACING.xl,
-  },
-  budgetMainRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  budgetLabel: {
-    color: COLORS.textMuted,
-    fontSize: SIZES.caption,
-    fontWeight: 'bold',
-    letterSpacing: 1,
-  },
-  budgetValue: {
-    fontSize: SIZES.h1 - 2,
-    fontWeight: 'bold',
+    fontFamily: 'sans-serif',
     marginTop: 4,
   },
-  badgeContainer: {
-    backgroundColor: COLORS.primaryGlow,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: SIZES.radiusFull,
-    borderWidth: 1,
-    borderColor: COLORS.primary,
-  },
-  monthBadge: {
-    color: COLORS.primaryLight,
-    fontSize: SIZES.caption,
-    fontWeight: 'bold',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: COLORS.border,
-    marginVertical: SPACING.md,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  statCol: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  statLabel: {
-    color: COLORS.textSecondary,
-    fontSize: SIZES.caption + 1,
-    marginBottom: 4,
-  },
-  statValue: {
-    color: COLORS.text,
-    fontSize: SIZES.h3 - 2,
-    fontWeight: 'bold',
-  },
-  statVerticalDivider: {
-    width: 1,
-    height: 30,
-    backgroundColor: COLORS.border,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: SPACING.lg,
-    marginBottom: SPACING.md,
-  },
-  sectionTitle: {
-    color: COLORS.text,
-    fontSize: SIZES.h3,
-    fontWeight: 'bold',
-  },
-  addNewButton: {
-    backgroundColor: COLORS.accent,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: SIZES.radiusSm,
-  },
-  addNewButtonText: {
-    color: COLORS.background,
-    fontSize: SIZES.caption + 1,
-    fontWeight: 'bold',
-  },
-  listContent: {
-    paddingHorizontal: SPACING.lg,
-    paddingBottom: SPACING.xl,
-  },
-  itemCard: {
-    backgroundColor: COLORS.surface,
-    borderRadius: SIZES.radiusMd,
-    padding: SPACING.md,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: SPACING.sm,
-  },
-  itemLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.md,
-  },
-  categoryIndicator: {
-    width: 12,
-    height: 12,
-    borderRadius: SIZES.radiusFull,
-  },
-  itemTitle: {
-    color: COLORS.text,
-    fontSize: SIZES.body - 1,
-    fontWeight: '600',
-  },
-  itemDetails: {
-    color: COLORS.textMuted,
-    fontSize: SIZES.caption,
+  activeDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: COLORS.primary,
     marginTop: 2,
   },
-  itemRight: {
-    alignItems: 'flex-end',
-  },
-  itemAmount: {
-    color: COLORS.text,
-    fontSize: SIZES.body,
-    fontWeight: 'bold',
-  },
-  emptyContainer: {
+  centerAddBtnContainer: {
+    width: 64,
     alignItems: 'center',
-    paddingVertical: SPACING.xxl,
+    justifyContent: 'flex-start',
+    height: '100%',
+    paddingTop: 4,
   },
-  emptyText: {
-    color: COLORS.textMuted,
-    fontSize: SIZES.body - 2,
-    textAlign: 'center',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+  centerAddBtn: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: COLORS.primary,
+    alignItems: 'center',
     justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: SPACING.lg,
-  },
-  modalContent: {
-    width: '100%',
-    backgroundColor: COLORS.surface,
-    borderRadius: SIZES.radiusLg,
-    padding: SPACING.lg,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  modalTitle: {
-    fontSize: SIZES.h3,
-    fontWeight: 'bold',
-    color: COLORS.text,
-    marginBottom: SPACING.lg,
-    textAlign: 'center',
-  },
-  inputGroup: {
-    marginBottom: SPACING.md,
-  },
-  modalLabel: {
-    color: COLORS.textSecondary,
-    fontSize: SIZES.caption + 1,
-    fontWeight: '600',
-    marginBottom: SPACING.xs,
-  },
-  modalInput: {
-    backgroundColor: COLORS.background,
-    borderWidth: 1.5,
-    borderColor: COLORS.border,
-    borderRadius: SIZES.radiusMd,
-    paddingHorizontal: SPACING.md,
-    height: 48,
-    color: COLORS.text,
-    fontSize: SIZES.body - 1,
-  },
-  categoryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: SPACING.sm,
-  },
-  categoryTab: {
-    flex: 1,
-    height: 40,
-    borderRadius: SIZES.radiusSm,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: COLORS.background,
-  },
-  categoryTabActive: {
-    borderColor: COLORS.accent,
-    backgroundColor: COLORS.accentGlow,
-  },
-  categoryTabText: {
-    color: COLORS.textSecondary,
-    fontSize: SIZES.caption + 1,
-    fontWeight: '600',
-  },
-  categoryTabTextActive: {
-    color: COLORS.accent,
-  },
-  modalActions: {
-    flexDirection: 'row',
-    gap: SPACING.md,
-    marginTop: SPACING.lg,
-  },
-  modalBtn: {
-    flex: 1,
-    height: 48,
-    borderRadius: SIZES.radiusMd,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalBtnCancel: {
-    borderWidth: 1.5,
-    borderColor: COLORS.border,
-    backgroundColor: COLORS.surface,
-  },
-  modalBtnCancelText: {
-    color: COLORS.textSecondary,
-    fontWeight: '600',
-  },
-  modalBtnSubmit: {
-    backgroundColor: COLORS.accent,
-  },
-  modalBtnSubmitText: {
-    color: COLORS.background,
-    fontWeight: 'bold',
+    marginTop: -22,
+    ...SHADOWS.md,
   },
 });
