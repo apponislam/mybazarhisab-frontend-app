@@ -2,43 +2,43 @@
 
 export const COLORS = {
   // Brand Colors
-  primary: '#6366f1',      // Indigo 500 (trust, finance, modern)
-  primaryDark: '#4f46e5',  // Indigo 600
-  primaryLight: '#c7d2fe', // Indigo 200
-  primaryGlow: 'rgba(99, 102, 241, 0.15)',
+  primary: '#e8a020',         // Gold/Orange (from web design)
+  primaryDark: '#c06010',     // Dark Gold/Orange
+  primaryLight: '#f5ede2',    // Off-white/light foreground
+  primaryGlow: 'rgba(232, 160, 32, 0.15)',
   
-  accent: '#14b8a6',       // Teal 500 (balance, currency, freshness)
-  accentDark: '#0d9488',   // Teal 600
-  accentLight: '#99f6e4',  // Teal 200
-  accentGlow: 'rgba(20, 184, 166, 0.15)',
+  accent: '#c06010',          // Dark Accent Orange
+  accentDark: '#8c4005',
+  accentLight: '#f5ede2',
+  accentGlow: 'rgba(192, 96, 16, 0.15)',
 
-  // Neutral Theme Colors (Modern Sleek Slate Dark Theme)
-  background: '#090d16',   // Deepest dark blue-gray
-  surface: '#151c2c',      // Card surface
-  surfaceElevated: '#1e293b', // Elevated card surface
+  // Neutral Theme Colors (Brown Dark Theme)
+  background: '#1a0e07',      // Warm Dark Brown
+  surface: '#251508',         // Lighter Dark Brown (Card bg)
+  surfaceElevated: '#2e1a0a', // Input / Field bg
   
   // Text Colors
-  text: '#f8fafc',          // Very light slate
-  textSecondary: '#94a3b8', // Cool gray/slate
-  textMuted: '#64748b',     // Darker slate gray
-  textOnPrimary: '#ffffff', // Plain white for primary button text
+  text: '#f5ede2',            // Warm off-white
+  textSecondary: '#a08060',   // Muted gold-brown
+  textMuted: '#6d533b',       // Darker muted brown
+  textOnPrimary: '#1a0e07',   // Dark text on gold button
   
   // Status Colors
-  success: '#10b981',       // Emerald 500
-  successLight: '#d1fae5',
-  error: '#f43f5e',         // Rose 500
-  errorLight: '#ffe4e6',
-  warning: '#f59e0b',       // Amber 500
-  warningLight: '#fef3c7',
+  success: '#22c55e',         // Bright green
+  successLight: 'rgba(34, 197, 94, 0.15)',
+  error: '#d4183d',           // Bright red
+  errorLight: 'rgba(212, 24, 61, 0.15)',
+  warning: '#f59e0b',
+  warningLight: 'rgba(245, 158, 11, 0.15)',
   
   // UI Details
-  border: '#242f47',        // Subtle border color
-  borderFocus: '#4f46e5',   // Focused input border
-  placeholder: '#475569',   // Input placeholder text
+  border: 'rgba(232, 160, 32, 0.18)',        // Gold translucent border
+  borderFocus: 'rgba(232, 160, 32, 0.7)',    // Focused input border
+  placeholder: '#6d533b',                    // Input placeholder text
   
   // Glassmorphism overlays
-  glassBg: 'rgba(21, 28, 44, 0.75)',
-  glassBorder: 'rgba(255, 255, 255, 0.08)',
+  glassBg: 'rgba(37, 21, 8, 0.75)',
+  glassBorder: 'rgba(232, 160, 32, 0.08)',
 };
 
 export const SPACING = {

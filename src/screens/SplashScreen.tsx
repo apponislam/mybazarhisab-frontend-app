@@ -8,8 +8,9 @@ import {
   StatusBar,
 } from 'react-native';
 import { COLORS, SPACING, SIZES, SHADOWS } from '../constants/theme';
+import { BookOpen, ShoppingBag, TrendingUp } from '../components/CustomIcon';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
 interface SplashScreenProps {
   onFinish: () => void;
@@ -17,43 +18,91 @@ interface SplashScreenProps {
 
 export default function SplashScreen({ onFinish }: SplashScreenProps) {
   // Animation values
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.85)).current;
+  const logoScale = useRef(new Animated.Value(0.5)).current;
+  const logoOpacity = useRef(new Animated.Value(0)).current;
+  const badgeLeftAnim = useRef(new Animated.Value(-15)).current;
+  const badgeRightAnim = useRef(new Animated.Value(-15)).current;
+  const badgeOpacity = useRef(new Animated.Value(0)).current;
+  const textOpacity = useRef(new Animated.Value(0)).current;
+  const textTranslateY = useRef(new Animated.Value(15)).current;
   const progressAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // 1. Logo & text fade in and scale up
+    // 1. Logo entry animation
     Animated.parallel([
-      Animated.timing(fadeAnim, {
+      Animated.timing(logoOpacity, {
         toValue: 1,
-        duration: 1000,
+        duration: 800,
         useNativeDriver: true,
       }),
-      Animated.spring(scaleAnim, {
+      Animated.spring(logoScale, {
         toValue: 1,
-        tension: 15,
-        friction: 7,
+        tension: 20,
+        friction: 6,
         useNativeDriver: true,
       }),
     ]).start();
 
-    // 2. Loading bar progress animation (2.2 seconds)
-    Animated.timing(progressAnim, {
-      toValue: 1,
-      duration: 2200,
-      useNativeDriver: false, // width animation requires false for native driver
-    }).start();
+    // 2. Delay entry for floating badges
+    Animated.sequence([
+      Animated.delay(400),
+      Animated.parallel([
+        Animated.timing(badgeOpacity, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+        Animated.spring(badgeLeftAnim, {
+          toValue: -20, // Slide out left
+          tension: 15,
+          friction: 5,
+          useNativeDriver: true,
+        }),
+        Animated.spring(badgeRightAnim, {
+          toValue: -20, // Slide out right
+          tension: 15,
+          friction: 5,
+          useNativeDriver: true,
+        }),
+      ]),
+    ]).start();
 
-    // 3. Trigger transition after splash completes
+    // 3. Text fade & slide up
+    Animated.sequence([
+      Animated.delay(300),
+      Animated.parallel([
+        Animated.timing(textOpacity, {
+          toValue: 1,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        Animated.timing(textTranslateY, {
+          toValue: 0,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+      ]),
+    ]).start();
+
+    // 4. Progress bar starts filling up after delay
+    Animated.sequence([
+      Animated.delay(400),
+      Animated.timing(progressAnim, {
+        toValue: 1,
+        duration: 2400,
+        useNativeDriver: false, // width animation requires useNativeDriver: false
+      }),
+    ]).start();
+
+    // 5. Total delay before finishing splash: 3.2 seconds
     const timer = setTimeout(() => {
       onFinish();
-    }, 2800);
+    }, 3200);
 
     return () => clearTimeout(timer);
-  }, [fadeAnim, scaleAnim, progressAnim, onFinish]);
+  }, []);
 
-  // Interpolate progress animation to width percentage
-  const progressWidth = progressAnim.interpolate({
+  const progressBarWidth = progressAnim.interpolate({
     inputRange: [0, 1],
     outputRange: ['0%', '100%'],
   });
@@ -62,49 +111,85 @@ export default function SplashScreen({ onFinish }: SplashScreenProps) {
     <View style={styles.container}>
       <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
       
-      {/* Background Decorative Mesh Gradients */}
-      <View style={[styles.gradientCircle, styles.circleTopLeft]} />
-      <View style={[styles.gradientCircle, styles.circleBottomRight]} />
+      {/* Mesh Glow Background */}
+      <View style={styles.glowOverlay} />
+      <View style={styles.topAccentBar} />
 
-      {/* Main Branding Section */}
-      <Animated.View
-        style={[
-          styles.content,
-          {
-            opacity: fadeAnim,
-            transform: [{ scale: scaleAnim }],
-          },
-        ]}
-      >
-        {/* Custom Premium Logo */}
-        <View style={[styles.logoContainer, SHADOWS.lg]}>
-          <View style={styles.logoBase}>
-            {/* Shopping ledger checklist lines (vector shapes) */}
-            <View style={[styles.logoLine, styles.logoLine1]} />
-            <View style={[styles.logoLine, styles.logoLine2]} />
-            <View style={[styles.logoLine, styles.logoLine3]} />
-            
-            {/* Calculation scale icon inside logo */}
-            <View style={styles.logoAccentBadge}>
-              <Text style={styles.logoBadgeText}>৳</Text>
+      {/* Main Brand logo & Title */}
+      <View style={styles.brandWrapper}>
+        <Animated.View
+          style={[
+            styles.logoWrapper,
+            {
+              opacity: logoOpacity,
+              transform: [{ scale: logoScale }],
+            },
+          ]}
+        >
+          <View style={styles.outerLogoBox}>
+            <View style={styles.innerLogoBox}>
+              <BookOpen color={COLORS.background} size={32} />
             </View>
           </View>
-        </View>
 
-        {/* App Title */}
-        <Text style={styles.title}>My Bazar Hisab</Text>
-        
-        {/* Subtitle */}
-        <Text style={styles.subtitle}>Simple Bazar & Expense Tracker</Text>
-      </Animated.View>
+          {/* Floating Left Badge: Shopping Bag */}
+          <Animated.View
+            style={[
+              styles.floatingBadge,
+              styles.floatingBadgeLeft,
+              {
+                opacity: badgeOpacity,
+                transform: [{ translateX: badgeLeftAnim }],
+              },
+            ]}
+          >
+            <ShoppingBag color={COLORS.primaryLight} size={20} />
+          </Animated.View>
 
-      {/* Loading Indicator Section */}
-      <Animated.View style={[styles.loaderContainer, { opacity: fadeAnim }]}>
-        <View style={styles.progressBarBg}>
-          <Animated.View style={[styles.progressBarFill, { width: progressWidth }]} />
+          {/* Floating Right Badge: Trending Up */}
+          <Animated.View
+            style={[
+              styles.floatingBadge,
+              styles.floatingBadgeRight,
+              {
+                opacity: badgeOpacity,
+                transform: [{ translateX: Animated.multiply(badgeRightAnim, -1) }],
+              },
+            ]}
+          >
+            <TrendingUp color={COLORS.primaryLight} size={20} />
+          </Animated.View>
+        </Animated.View>
+
+        {/* Title & Subtitles */}
+        <Animated.View
+          style={{
+            opacity: textOpacity,
+            transform: [{ translateY: textTranslateY }],
+            alignItems: 'center',
+          }}
+        >
+          <View style={styles.titleRow}>
+            <Text style={styles.titleText}>My Bazar </Text>
+            <Text style={styles.titleAccentText}>Hisab</Text>
+          </View>
+          <Text style={styles.appHeading}>YOUR MARKET ACCOUNT BOOK</Text>
+        </Animated.View>
+      </View>
+
+      {/* Bottom explanation text */}
+      <Animated.Text style={[styles.bottomText, { opacity: textOpacity }]}>
+        Track your market expenses,{"\n"}manage your bazar accounts with ease.
+      </Animated.Text>
+
+      {/* Progress loading track */}
+      <View style={styles.progressContainer}>
+        <View style={styles.progressTrack}>
+          <Animated.View style={[styles.progressBar, { width: progressBarWidth }]} />
         </View>
-        <Text style={styles.loaderText}>Loading your ledger...</Text>
-      </Animated.View>
+      </View>
+      
+      <View style={styles.bottomAccentBar} />
     </View>
   );
 }
@@ -114,120 +199,130 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: SPACING.xxl,
+    justifyContent: 'center',
   },
-  gradientCircle: {
+  glowOverlay: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: COLORS.background,
+    // Soft radial glow approximation using an overlay with alpha primary
+    opacity: 0.12,
+  },
+  topAccentBar: {
     position: 'absolute',
-    borderRadius: 999,
-    opacity: 0.25,
-    filter: 'blur(60px)', // Web/Modern styling fallbacks
-  },
-  circleTopLeft: {
-    width: width * 1.2,
-    height: width * 1.2,
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 4,
     backgroundColor: COLORS.primary,
-    top: -width * 0.4,
-    left: -width * 0.4,
+    opacity: 0.6,
   },
-  circleBottomRight: {
-    width: width * 1.2,
-    height: width * 1.2,
-    backgroundColor: COLORS.accent,
-    bottom: -width * 0.4,
-    right: -width * 0.4,
+  bottomAccentBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 4,
+    backgroundColor: COLORS.primary,
+    opacity: 0.6,
   },
-  content: {
-    flex: 1,
+  brandWrapper: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: SPACING.xxl,
+    flex: 1,
+    marginTop: 60,
   },
-  logoContainer: {
-    width: 110,
-    height: 110,
-    borderRadius: SIZES.radiusLg,
-    backgroundColor: COLORS.surface,
+  logoWrapper: {
+    position: 'relative',
+    marginBottom: 36,
+  },
+  outerLogoBox: {
+    width: 96,
+    height: 96,
+    borderRadius: 24,
+    backgroundColor: 'rgba(232, 160, 32, 0.1)',
     borderWidth: 1,
     borderColor: COLORS.border,
-    padding: SPACING.md,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: SPACING.lg,
   },
-  logoBase: {
-    width: '100%',
-    height: '100%',
-    justifyContent: 'space-around',
-    alignItems: 'flex-start',
-  },
-  logoLine: {
-    height: 6,
-    borderRadius: SIZES.radiusSm,
-  },
-  logoLine1: {
-    width: '65%',
+  innerLogoBox: {
+    width: 64,
+    height: 64,
+    borderRadius: 16,
     backgroundColor: COLORS.primary,
-  },
-  logoLine2: {
-    width: '80%',
-    backgroundColor: COLORS.accent,
-  },
-  logoLine3: {
-    width: '50%',
-    backgroundColor: COLORS.primaryLight,
-  },
-  logoAccentBadge: {
-    position: 'absolute',
-    bottom: -5,
-    right: -5,
-    backgroundColor: COLORS.accent,
-    width: 32,
-    height: 32,
-    borderRadius: SIZES.radiusFull,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 2,
-    borderColor: COLORS.surface,
+    ...SHADOWS.md,
   },
-  logoBadgeText: {
-    color: COLORS.background,
-    fontSize: 16,
-    fontWeight: 'bold',
+  floatingBadge: {
+    position: 'absolute',
+    bottom: -6,
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: 'rgba(192, 96, 16, 0.85)',
+    borderWidth: 1,
+    borderColor: 'rgba(232, 160, 32, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...SHADOWS.sm,
   },
-  title: {
-    fontSize: SIZES.h1,
+  floatingBadgeLeft: {
+    left: 0,
+  },
+  floatingBadgeRight: {
+    right: 0,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  titleText: {
+    fontSize: 34,
     fontWeight: 'bold',
     color: COLORS.text,
-    letterSpacing: 1.5,
-    marginBottom: SPACING.sm,
+    fontFamily: 'serif',
   },
-  subtitle: {
-    fontSize: SIZES.body,
+  titleAccentText: {
+    fontSize: 34,
+    fontWeight: 'bold',
+    color: COLORS.primary,
+    fontFamily: 'serif',
+  },
+  appHeading: {
+    fontSize: 12,
+    fontWeight: 'bold',
     color: COLORS.textSecondary,
-    letterSpacing: 0.5,
+    letterSpacing: 2.2,
+    fontFamily: 'monospace',
+    marginTop: 4,
   },
-  loaderContainer: {
-    width: '75%',
+  bottomText: {
+    position: 'absolute',
+    bottom: 120,
+    textAlign: 'center',
+    color: COLORS.textSecondary,
+    fontSize: 14,
+    lineHeight: 20,
+    paddingHorizontal: 36,
+    fontFamily: 'sans-serif',
+  },
+  progressContainer: {
+    position: 'absolute',
+    bottom: 60,
     alignItems: 'center',
-    marginBottom: SPACING.xl,
   },
-  progressBarBg: {
-    height: 4,
-    width: '100%',
-    backgroundColor: COLORS.border,
-    borderRadius: SIZES.radiusFull,
+  progressTrack: {
+    width: 128,
+    height: 2.5,
+    backgroundColor: 'rgba(232, 160, 32, 0.15)',
+    borderRadius: 1.5,
     overflow: 'hidden',
-    marginBottom: SPACING.sm,
   },
-  progressBarFill: {
+  progressBar: {
     height: '100%',
-    backgroundColor: COLORS.accent,
-    borderRadius: SIZES.radiusFull,
-  },
-  loaderText: {
-    fontSize: SIZES.caption,
-    color: COLORS.textMuted,
-    letterSpacing: 1,
+    backgroundColor: COLORS.primary,
+    borderRadius: 1.5,
   },
 });
