@@ -351,3 +351,113 @@ export function Plus({ color = '#e8a020', size = 20, style }: IconProps) {
     </View>
   );
 }
+
+export function ChevronUp({ color = '#e8a020', size = 20, style }: IconProps) {
+  return (
+    <View style={[{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }, style]}>
+      <View style={{
+        width: size * 0.35,
+        height: size * 0.35,
+        borderLeftWidth: 1.5,
+        borderTopWidth: 1.5,
+        borderColor: color,
+        transform: [{ rotate: '45deg' }],
+        marginTop: size * 0.08,
+      }} />
+    </View>
+  );
+}
+
+export function ChevronDown({ color = '#e8a020', size = 20, style }: IconProps) {
+  return (
+    <View style={[{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }, style]}>
+      <View style={{
+        width: size * 0.35,
+        height: size * 0.35,
+        borderLeftWidth: 1.5,
+        borderBottomWidth: 1.5,
+        borderColor: color,
+        transform: [{ rotate: '-45deg' }],
+        marginBottom: size * 0.08,
+      }} />
+    </View>
+  );
+}
+
+export function ChevronRight({ color = '#e8a020', size = 20, style }: IconProps) {
+  return (
+    <View style={[{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }, style]}>
+      <View style={{
+        width: size * 0.32,
+        height: size * 0.32,
+        borderTopWidth: 1.5,
+        borderRightWidth: 1.5,
+        borderColor: color,
+        transform: [{ rotate: '45deg' }],
+        marginRight: size * 0.08,
+      }} />
+    </View>
+  );
+}
+
+export function Calendar({ color = '#e8a020', size = 20, style }: IconProps) {
+  const w = size * 0.75;
+  const h = size * 0.72;
+  return (
+    <View style={[{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }, style]}>
+      {/* Outer border */}
+      <View style={{
+        width: w,
+        height: h,
+        borderWidth: 1.5,
+        borderColor: color,
+        borderRadius: 2.5,
+        paddingTop: size * 0.2,
+      }}>
+        {/* Horizontal Line under rings */}
+        <View style={{ height: 1.2, backgroundColor: color, width: '100%' }} />
+        {/* Small calendar dates representation */}
+        <View style={{
+          flex: 1,
+          flexDirection: 'row',
+          flexWrap: 'wrap',
+          gap: 2,
+          padding: 3,
+          justifyContent: 'center',
+          alignContent: 'center'
+        }}>
+          {[1, 2, 3, 4, 5, 6].map((k) => (
+            <View key={k} style={{ width: 2, height: 2, borderRadius: 0.5, backgroundColor: color }} />
+          ))}
+        </View>
+      </View>
+      {/* Binder rings */}
+      <View style={{ width: 1.5, height: 4, backgroundColor: color, position: 'absolute', top: size * 0.08, left: size * 0.28, borderRadius: 0.5 }} />
+      <View style={{ width: 1.5, height: 4, backgroundColor: color, position: 'absolute', top: size * 0.08, right: size * 0.28, borderRadius: 0.5 }} />
+    </View>
+  );
+}
+
+export function Package({ color = '#e8a020', size = 20, style }: IconProps) {
+  const w = size * 0.75;
+  const h = size * 0.65;
+  return (
+    <View style={[{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }, style]}>
+      {/* Box base */}
+      <View style={{
+        width: w,
+        height: h,
+        borderWidth: 1.5,
+        borderColor: color,
+        borderRadius: 2.5,
+        justifyContent: 'center',
+        alignItems: 'center'
+      }}>
+        {/* Horizontal dividing line */}
+        <View style={{ width: '100%', height: 1.2, backgroundColor: color, position: 'absolute', top: h * 0.35 }} />
+        {/* Vertical dividing tape line */}
+        <View style={{ height: '100%', width: 1.2, backgroundColor: color }} />
+      </View>
+    </View>
+  );
+}
