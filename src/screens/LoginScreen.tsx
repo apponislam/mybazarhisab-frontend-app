@@ -20,6 +20,7 @@ import { login } from '../redux/features/auth/authSlice';
 import { useLoginMutation, useRegisterMutation } from '../redux/features/auth/authApi';
 // Force Babel / react-native-dotenv cache refresh for Cloudinary keys
 import { CLOUDINARY_CLOUD_NAME, CLOUDINARY_UPLOAD_PRESET } from '@env';
+import { launchImageLibrary } from 'react-native-image-picker';
 import {
   Mail,
   Lock,
@@ -87,7 +88,7 @@ export default function LoginScreen() {
   const [showPw, setShowPw] = useState(false);
   const [showRepeat, setShowRepeat] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [photoSelected, setPhotoSelected] = useState(false);
+  const [profileImageUri, setProfileImageUri] = useState<string | null>(null);
 
   // OTP Input references
   const otpRefs = useRef<(TextInput | null)[]>([]);
@@ -101,11 +102,20 @@ export default function LoginScreen() {
 
   // Upload to Cloudinary helper
   const uploadToCloudinary = async (): Promise<string | undefined> => {
+    if (!profileImageUri) return undefined;
     try {
-      console.log('Uploading default photo to Cloudinary...');
+      console.log('Uploading local photo to Cloudinary:', profileImageUri);
       const data = new FormData();
-      const defaultPhotoUrl = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=500';
-      data.append('file', defaultPhotoUrl);
+      
+      const uriParts = profileImageUri.split('.');
+      const fileType = uriParts[uriParts.length - 1];
+      const fileName = `photo.${fileType}`;
+
+      data.append('file', {
+        uri: Platform.OS === 'android' ? profileImageUri : profileImageUri.replace('file://', ''),
+        type: `image/${fileType === 'png' ? 'png' : 'jpeg'}`,
+        name: fileName,
+      } as any);
       data.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
 
       const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
@@ -129,6 +139,22 @@ export default function LoginScreen() {
       console.error('Cloudinary upload error:', uploadError);
       return undefined;
     }
+  };
+
+  const handleChoosePhoto = () => {
+    launchImageLibrary({ mediaType: 'photo', quality: 0.8 }, (response) => {
+      if (response.didCancel) {
+        console.log('User cancelled image picker');
+      } else if (response.errorMessage) {
+        console.log('ImagePicker Error: ', response.errorMessage);
+        showToast('Image picker error', 'error');
+      } else if (response.assets && response.assets.length > 0) {
+        const asset = response.assets[0];
+        if (asset.uri) {
+          setProfileImageUri(asset.uri);
+        }
+      }
+    });
   };
 
   // Handle Login submission
@@ -166,7 +192,7 @@ export default function LoginScreen() {
     setLoading(true);
     try {
       let profileImageUrl = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=500';
-      if (photoSelected) {
+      if (profileImageUri) {
         const uploadedUrl = await uploadToCloudinary();
         if (uploadedUrl) {
           profileImageUrl = uploadedUrl;
@@ -376,7 +402,10 @@ export default function LoginScreen() {
 
         {/* Sign In Primary Button */}
         <TouchableOpacity
-          style={styles.primaryButton}
+          style={[
+            styles.primaryButton,
+            (loading || !email.trim() || !password.trim()) && styles.primaryButtonDisabled
+          ]}
           onPress={handleLoginSubmit}
           disabled={loading || !email.trim() || !password.trim()}
           activeOpacity={0.8}
@@ -430,22 +459,18 @@ export default function LoginScreen() {
           </Text>
         </View>
 
-        {/* Mock Photo Picker */}
+        {/* Real Photo Picker */}
         <View style={styles.photoPickerContainer}>
           <TouchableOpacity
             style={styles.photoPickerCircle}
-            onPress={() => setPhotoSelected(!photoSelected)}
+            onPress={profileImageUri ? () => setProfileImageUri(null) : handleChoosePhoto}
             activeOpacity={0.8}
           >
-            {photoSelected ? (
-              <View
-                style={[
-                  styles.avatarTextCircle,
-                  { backgroundColor: COLORS.accent },
-                ]}
-              >
-                <Text style={styles.avatarTextLabel}>AI</Text>
-              </View>
+            {profileImageUri ? (
+              <Image
+                source={{ uri: profileImageUri }}
+                style={styles.pickerAvatarImage}
+              />
             ) : (
               <View style={styles.avatarPlaceholder}>
                 <User color={COLORS.textSecondary} size={30} />
@@ -453,7 +478,7 @@ export default function LoginScreen() {
               </View>
             )}
             <View style={styles.photoBadge}>
-              {photoSelected ? (
+              {profileImageUri ? (
                 <X color={COLORS.textOnPrimary} size={12} />
               ) : (
                 <Camera color={COLORS.textOnPrimary} size={14} />
@@ -650,7 +675,16 @@ export default function LoginScreen() {
 
           {/* Submit */}
           <TouchableOpacity
-            style={[styles.primaryButton, { marginTop: 10 }]}
+            style={[
+              styles.primaryButton,
+              { marginTop: 10 },
+              (loading ||
+                !name.trim() ||
+                !email.trim() ||
+                !phone.trim() ||
+                password.length < 8 ||
+                password !== repeatPassword) && styles.primaryButtonDisabled
+            ]}
             onPress={handleRegisterSubmit}
             disabled={
               loading ||
@@ -1247,6 +1281,11 @@ const styles = StyleSheet.create({
     marginTop: 16,
     ...SHADOWS.md,
   },
+  primaryButtonDisabled: {
+    backgroundColor: 'rgba(232, 160, 32, 0.4)',
+    shadowOpacity: 0,
+    elevation: 0,
+  },
   loadingRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1387,6 +1426,11 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
     color: COLORS.textOnPrimary,
+  },
+  pickerAvatarImage: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
   },
   photoBadge: {
     width: 28,
