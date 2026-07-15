@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   View,
@@ -8,8 +8,14 @@ import {
   StatusBar,
   Dimensions,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { COLORS, SPACING, SIZES, SHADOWS } from '../constants/theme';
+
+// Redux & API
+import { useAppSelector, useAppDispatch } from '../redux/hooks';
+import { hasGroup as selectHasGroup } from '../redux/features/auth/authSlice';
+import { useLazyCheckGroupQuery, useGetMyGroupQuery } from '../redux/features/group/groupApi';
 
 // Custom icons & components
 import { BookOpen, ShoppingBag, Calendar, User, Plus } from '../components/CustomIcon';
@@ -136,8 +142,37 @@ export default function HomeScreen() {
     };
   };
 
+  const userHasGroup = useAppSelector(selectHasGroup);
+  const [triggerCheckGroup, { isFetching: isChecking }] = useLazyCheckGroupQuery();
+  const { data: myGroupData, isFetching: isFetchingGroup } = useGetMyGroupQuery(undefined, {
+    skip: !userHasGroup,
+  });
+
+  useEffect(() => {
+    if (userHasGroup === null) {
+      triggerCheckGroup();
+    }
+  }, [userHasGroup]);
+
+  useEffect(() => {
+    if (userHasGroup === true && myGroupData?.data) {
+      setGroupStats(calculateStats(myGroupData.data.name));
+    } else if (userHasGroup === false) {
+      setGroupStats(null);
+    }
+  }, [userHasGroup, myGroupData]);
+
+  // If loading or checking membership
+  if (userHasGroup === null || isChecking || (userHasGroup === true && isFetchingGroup && !groupStats)) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </View>
+    );
+  }
+
   // Render Gate 1: Join/Create group selection
-  if (!groupStats) {
+  if (userHasGroup === false || !groupStats) {
     return <GroupPickerScreen onGroupReady={(s) => setGroupStats(s)} />;
   }
 
@@ -417,5 +452,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: -22,
     ...SHADOWS.md,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: COLORS.background,
   },
 });

@@ -12,6 +12,12 @@ import {
 import { COLORS, SPACING, SIZES, SHADOWS } from '../constants/theme';
 import { User, Plus } from '../components/CustomIcon';
 
+// Redux & API
+import { useAppDispatch } from '../redux/hooks';
+import { logout } from '../redux/features/auth/authSlice';
+import { useCreateGroupMutation, useJoinGroupMutation } from '../redux/features/group/groupApi';
+import Toast from '../components/Toast';
+
 // Types from web App.tsx
 export interface GroupStats {
   groupName: string;
@@ -60,30 +66,63 @@ interface GroupPickerProps {
 }
 
 export default function GroupPickerScreen({ onGroupReady }: GroupPickerProps) {
+  const dispatch = useAppDispatch();
+  const [createGroupApi, { isLoading: isCreating }] = useCreateGroupMutation();
+  const [joinGroupApi, { isLoading: isJoining }] = useJoinGroupMutation();
+
   const [joinCode, setJoinCode] = useState('');
   const [groupName, setGroupName] = useState('');
   
   const [jf, setJf] = useState(false);
   const [cf, setCf] = useState(false);
-  const [jl, setJl] = useState(false);
-  const [cl, setCl] = useState(false);
 
-  const handleJoinGroup = () => {
-    if (!joinCode.trim()) return;
-    setJl(true);
-    setTimeout(() => {
-      setJl(false);
-      onGroupReady(makeMockStats('Sabzi Mandi Group'));
-    }, 1500);
+  // Toast notification state
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error'; visible: boolean }>({
+    message: '',
+    type: 'success',
+    visible: false,
+  });
+
+  const showToast = (message: string, type: 'success' | 'error') => {
+    setToast({ message, type, visible: true });
   };
 
-  const handleCreateGroup = () => {
+  const hideToast = () => {
+    setToast(prev => ({ ...prev, visible: false }));
+  };
+
+  const handleJoinGroup = async () => {
+    if (!joinCode.trim()) return;
+    try {
+      const res = await joinGroupApi({ inviteCode: joinCode.trim() }).unwrap();
+      if (res?.success) {
+        onGroupReady(makeMockStats(res.data.name || 'Joined Group'));
+      } else {
+        showToast(res?.message || 'Failed to join group', 'error');
+      }
+    } catch (err: any) {
+      console.log('Join group error:', err);
+      showToast(err?.data?.message || err?.message || 'An error occurred during joining', 'error');
+    }
+  };
+
+  const handleCreateGroup = async () => {
     if (!groupName.trim()) return;
-    setCl(true);
-    setTimeout(() => {
-      setCl(false);
-      onGroupReady(makeMockStats(groupName.trim()));
-    }, 1500);
+    try {
+      const res = await createGroupApi({ name: groupName.trim() }).unwrap();
+      if (res?.success) {
+        onGroupReady(makeMockStats(groupName.trim()));
+      } else {
+        showToast(res?.message || 'Failed to create group', 'error');
+      }
+    } catch (err: any) {
+      console.log('Create group error:', err);
+      showToast(err?.data?.message || err?.message || 'An error occurred during creation', 'error');
+    }
+  };
+
+  const handleSignOut = () => {
+    dispatch(logout());
   };
 
   return (
@@ -129,12 +168,15 @@ export default function GroupPickerScreen({ onGroupReady }: GroupPickerProps) {
           </View>
 
           <TouchableOpacity
-            style={styles.primaryButton}
+            style={[
+              styles.primaryButton,
+              (isJoining || !joinCode.trim()) && styles.primaryButtonDisabled
+            ]}
             onPress={handleJoinGroup}
-            disabled={jl || !joinCode.trim()}
+            disabled={isJoining || isCreating || !joinCode.trim()}
             activeOpacity={0.8}
           >
-            {jl ? (
+            {isJoining ? (
               <ActivityIndicator color={COLORS.textOnPrimary} size="small" />
             ) : (
               <Text style={styles.primaryButtonText}>Join Group</Text>
@@ -175,12 +217,16 @@ export default function GroupPickerScreen({ onGroupReady }: GroupPickerProps) {
           </View>
 
           <TouchableOpacity
-            style={[styles.outlineButton, { borderColor: COLORS.accent }]}
+            style={[
+              styles.outlineButton,
+              { borderColor: COLORS.accent },
+              (isCreating || !groupName.trim()) && styles.outlineButtonDisabled
+            ]}
             onPress={handleCreateGroup}
-            disabled={cl || !groupName.trim()}
+            disabled={isCreating || isJoining || !groupName.trim()}
             activeOpacity={0.8}
           >
-            {cl ? (
+            {isCreating ? (
               <ActivityIndicator color={COLORS.accent} size="small" />
             ) : (
               <View style={styles.iconRow}>
@@ -190,7 +236,23 @@ export default function GroupPickerScreen({ onGroupReady }: GroupPickerProps) {
             )}
           </TouchableOpacity>
         </View>
+
+        {/* Sign Out Button */}
+        <TouchableOpacity
+          style={styles.logoutButton}
+          onPress={handleSignOut}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.logoutText}>🚪 Sign Out</Text>
+        </TouchableOpacity>
       </ScrollView>
+
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        visible={toast.visible}
+        onHide={hideToast}
+      />
     </View>
   );
 }
@@ -347,6 +409,27 @@ const styles = StyleSheet.create({
     color: COLORS.accent,
     fontSize: 16,
     fontWeight: 'bold',
+    fontFamily: 'sans-serif',
+  },
+  primaryButtonDisabled: {
+    backgroundColor: 'rgba(232, 160, 32, 0.4)',
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  outlineButtonDisabled: {
+    borderColor: 'rgba(232, 160, 32, 0.3)',
+    opacity: 0.6,
+  },
+  logoutButton: {
+    alignSelf: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    marginTop: 10,
+  },
+  logoutText: {
+    color: COLORS.textSecondary,
+    fontSize: 14,
+    fontWeight: '600',
     fontFamily: 'sans-serif',
   },
 });

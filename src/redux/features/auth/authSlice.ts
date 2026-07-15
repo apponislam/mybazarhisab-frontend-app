@@ -14,12 +14,14 @@ type TAuthState = {
   isLoggedIn: boolean;
   user: TUser | null;
   token: string | null;
+  hasGroup: boolean | null;
 };
 
 const initialState: TAuthState = {
   isLoggedIn: false,
   user: null,
   token: null,
+  hasGroup: null,
 };
 
 const authSlice = createSlice({
@@ -43,11 +45,15 @@ const authSlice = createSlice({
       state.isLoggedIn = false;
       state.user = null;
       state.token = null;
+      state.hasGroup = null;
+    },
+    setHasGroup: (state, action: PayloadAction<boolean>) => {
+      state.hasGroup = action.payload;
     },
   },
 });
 
-export const { login, logout } = authSlice.actions;
+export const { login, logout, setHasGroup } = authSlice.actions;
 export default authSlice.reducer;
 
 // Selectors matching letanest style
@@ -55,3 +61,4 @@ export const isLoggedIn = (state: RootState) => state.auth.isLoggedIn;
 export const currentUser = (state: RootState) => state.auth.user;
 export const currentUserEmail = (state: RootState) => state.auth.user?.email || null;
 export const currentToken = (state: RootState) => state.auth.token;
+export const hasGroup = (state: RootState) => state.auth.hasGroup;
