@@ -8,10 +8,10 @@ import {
   ScrollView,
   ActivityIndicator,
   Platform,
-  Alert,
 } from 'react-native';
 import { COLORS, SPACING, SIZES, SHADOWS } from '../constants/theme';
 import { useChangePasswordMutation } from '../redux/features/auth/authApi';
+import Toast from '../components/Toast';
 import { ArrowLeft, Lock, Eye, EyeOff, CheckCircle } from '../components/CustomIcon';
 
 interface ChangePasswordScreenProps {
@@ -19,6 +19,7 @@ interface ChangePasswordScreenProps {
 }
 
 export default function ChangePasswordScreen({ onBack }: ChangePasswordScreenProps) {
+  // ── All hooks FIRST (must be in consistent order) ──
   const [current, setCurrent] = useState('');
   const [newPass, setNewPass] = useState('');
   const [repeat, setRepeat] = useState('');
@@ -34,7 +35,24 @@ export default function ChangePasswordScreen({ onBack }: ChangePasswordScreenPro
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
 
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error'; visible: boolean }>({
+    message: '',
+    type: 'success',
+    visible: false,
+  });
+
+  const [changePasswordApi] = useChangePasswordMutation();
+
+  // ── Derived values & helpers ──
   const mismatch = repeat.length > 0 && newPass !== repeat;
+
+  const showToast = (message: string, type: 'success' | 'error') => {
+    setToast({ message, type, visible: true });
+  };
+
+  const hideToast = () => {
+    setToast(prev => ({ ...prev, visible: false }));
+  };
   
   // Password strength calculation helper
   const getPasswordStrength = (pass: string) => {
@@ -58,8 +76,6 @@ export default function ChangePasswordScreen({ onBack }: ChangePasswordScreenPro
     return 'transparent';
   };
 
-  const [changePasswordApi] = useChangePasswordMutation();
-
   const handleSubmit = async () => {
     if (mismatch || newPass.length < 8 || !current) return;
     setLoading(true);
@@ -70,19 +86,20 @@ export default function ChangePasswordScreen({ onBack }: ChangePasswordScreenPro
       }).unwrap();
 
       if (res.success) {
+        showToast('Password updated successfully!', 'success');
         setDone(true);
         setTimeout(() => {
           setDone(false);
           onBack();
         }, 1500);
       } else {
-        Alert.alert('Error', res.message || 'Failed to change password');
+        showToast(res.message || 'Failed to change password', 'error');
       }
     } catch (error: any) {
       console.error('Failed to change password:', error);
-      Alert.alert(
-        'Error',
-        error?.data?.message || 'An error occurred while changing password'
+      showToast(
+        error?.data?.message || 'An error occurred while changing password',
+        'error'
       );
     } finally {
       setLoading(false);
@@ -247,6 +264,12 @@ export default function ChangePasswordScreen({ onBack }: ChangePasswordScreenPro
           </View>
         </View>
       </ScrollView>
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        visible={toast.visible}
+        onHide={hideToast}
+      />
     </View>
   );
 }
