@@ -11,6 +11,7 @@ import {
   StatusBar,
   Dimensions,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { COLORS, SPACING, SIZES, SHADOWS } from '../constants/theme';
 import { useAppDispatch } from '../redux/hooks';
@@ -195,7 +196,10 @@ export default function LoginScreen() {
       {/* Top logo & app title */}
       <View style={styles.logoHeader}>
         <View style={styles.outerLogoBox}>
-          <BookOpen color={COLORS.primary} size={28} />
+          <Image
+            source={require('../assets/logo.png')}
+            style={styles.logoImage}
+          />
         </View>
         <Text style={styles.appTitle}>
           My Bazar <Text style={{ color: COLORS.primary }}>Hisab</Text>
@@ -1042,6 +1046,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 12,
+  },
+  logoImage: {
+    width: 52,
+    height: 52,
+    borderRadius: 14,
   },
   appTitle: {
     fontSize: 28,

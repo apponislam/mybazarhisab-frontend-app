@@ -8,6 +8,7 @@ import {
   Switch,
   Alert,
   Platform,
+  Image,
 } from 'react-native';
 import { COLORS, SPACING, SIZES, SHADOWS } from '../constants/theme';
 import { useAppDispatch } from '../redux/hooks';
@@ -116,11 +117,17 @@ export default function ProfileTab({
       showsVerticalScrollIndicator={false}
     >
       {/* Title Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>
-          My <Text style={{ color: COLORS.primary }}>Profile</Text>
-        </Text>
-        <Text style={styles.headerSubtitle}>Account & settings</Text>
+      <View style={styles.headerRow}>
+        <View>
+          <Text style={styles.headerTitle}>
+            My <Text style={{ color: COLORS.primary }}>Profile</Text>
+          </Text>
+          <Text style={styles.headerSubtitle}>Account & settings</Text>
+        </View>
+        <Image
+          source={require('../assets/logo.png')}
+          style={styles.headerLogo}
+        />
       </View>
       <View style={styles.divider} />
 
@@ -320,8 +327,18 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
     gap: 20,
   },
-  header: {
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingBottom: 16,
+  },
+  headerLogo: {
+    width: 44,
+    height: 44,
+    borderRadius: 11,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   headerTitle: {
     fontSize: 22,

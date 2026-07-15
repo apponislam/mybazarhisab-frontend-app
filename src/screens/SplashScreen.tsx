@@ -6,6 +6,7 @@ import {
   Animated,
   Dimensions,
   StatusBar,
+  Image,
 } from 'react-native';
 import { COLORS, SPACING, SIZES, SHADOWS } from '../constants/theme';
 import { BookOpen, ShoppingBag, TrendingUp } from '../components/CustomIcon';
@@ -127,9 +128,10 @@ export default function SplashScreen({ onFinish }: SplashScreenProps) {
           ]}
         >
           <View style={styles.outerLogoBox}>
-            <View style={styles.innerLogoBox}>
-              <BookOpen color={COLORS.background} size={32} />
-            </View>
+            <Image
+              source={require('../assets/logo.png')}
+              style={styles.logoImage}
+            />
           </View>
 
           {/* Floating Left Badge: Shopping Bag */}
@@ -245,14 +247,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  innerLogoBox: {
-    width: 64,
-    height: 64,
-    borderRadius: 16,
-    backgroundColor: COLORS.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    ...SHADOWS.md,
+  logoImage: {
+    width: 90,
+    height: 90,
+    borderRadius: 22,
   },
   floatingBadge: {
     position: 'absolute',

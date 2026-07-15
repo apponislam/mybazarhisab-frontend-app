@@ -4,7 +4,7 @@ from PIL import Image, ImageDraw
 
 # Paths
 WORKSPACE_DIR = r"e:\Next Js\Bazar Hisab\mybazarhisab-frontend-app"
-MASTER_ICON_PATH = r"C:\Users\Appon\.gemini\antigravity-ide\brain\97165f06-2c87-4b37-80a7-03c94d26ebed\bazar_hisab_master_icon_1783927711862.png"
+MASTER_ICON_PATH = r"C:\Users\Appon\.gemini\antigravity-ide\brain\5ac42a06-494b-4268-9a92-0f529f6dbd6f\bazar_hisab_icon_1784085063864.png"
 IOS_ICONSET_DIR = os.path.join(WORKSPACE_DIR, "ios", "AwesomeProject", "Images.xcassets", "AppIcon.appiconset")
 ANDROID_RES_DIR = os.path.join(WORKSPACE_DIR, "android", "app", "src", "main", "res")
 
@@ -41,7 +41,7 @@ def generate_ios_icons(master_img):
         # For iOS, icons should not have transparency/alpha channel (Apple app store requirement)
         # Fill transparency with background color if it exists, or just convert to RGB
         resized = master_img.resize(size, Image.Resampling.LANCZOS)
-        rgb_img = Image.new("RGB", size, (9, 13, 22))  # `#090d16` theme background
+        rgb_img = Image.new("RGB", size, (26, 14, 7))  # `#1a0e07` theme background (Warm Dark Brown)
         if resized.mode == "RGBA":
             rgb_img.paste(resized, (0, 0), mask=resized.split()[3])
         else:
