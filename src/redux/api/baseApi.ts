@@ -27,6 +27,10 @@ export const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, Fetch
   console.log(result);
 
   if (result?.error?.status === 401 || result?.error?.status === 403) {
+    const url = typeof args === 'string' ? args : args.url;
+    if (url.includes('auth/login') || url.includes('auth/register')) {
+      return result;
+    }
     // Attempt token refresh
     const refreshResult = await baseQuery(
       { url: '/auth/refresh-token', method: 'POST' },
