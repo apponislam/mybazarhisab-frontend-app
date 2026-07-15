@@ -1,6 +1,33 @@
 import { baseApi } from '../../api/baseApi';
 import { setHasGroup } from '../auth/authSlice';
 
+export type TGroupMember = {
+  _id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  profileImage?: string;
+};
+
+export type TGroupCreator = {
+  _id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  profileImage?: string;
+} | string;
+
+export type TGroupDetails = {
+  _id: string;
+  name: string;
+  creator: TGroupCreator;
+  members: TGroupMember[];
+  inviteCode: string;
+  isDeleted: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export const groupApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     checkGroup: builder.query<{ success: boolean; message: string; data: boolean }, void>({
@@ -19,7 +46,7 @@ export const groupApi = baseApi.injectEndpoints({
         }
       },
     }),
-    getMyGroup: builder.query<{ success: boolean; message: string; data: { name: string; inviteCode: string } | null }, void>({
+    getMyGroup: builder.query<{ success: boolean; message: string; data: TGroupDetails | null }, void>({
       query: () => ({
         url: 'groups/my-group',
         method: 'GET',

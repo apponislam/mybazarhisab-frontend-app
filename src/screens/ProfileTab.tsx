@@ -14,6 +14,7 @@ import { COLORS, SPACING, SIZES, SHADOWS } from '../constants/theme';
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
 import { logout, currentUser } from '../redux/features/auth/authSlice';
 import { useGetMeQuery } from '../redux/features/auth/authApi';
+import { useGetMyGroupQuery } from '../redux/features/group/groupApi';
 import {
   User,
   Lock,
@@ -22,6 +23,7 @@ import {
   X,
   ChevronRight,
   CheckCircle,
+  BookOpen,
 } from '../components/CustomIcon';
 import { Avatar, initials } from './ExpensesTab';
 
@@ -78,16 +80,22 @@ function SettingsRow({
 interface ProfileTabProps {
   onEditProfile: () => void;
   onChangePassword: () => void;
+  onViewGroupDetails: () => void;
 }
 
 export default function ProfileTab({
   onEditProfile,
   onChangePassword,
+  onViewGroupDetails,
 }: ProfileTabProps) {
   const dispatch = useAppDispatch();
   
   // Fetch fresh profile info
   useGetMeQuery(undefined, { refetchOnMountOrArgChange: true });
+  
+  // Fetch fresh group info
+  const { data: groupData } = useGetMyGroupQuery(undefined, { refetchOnMountOrArgChange: true });
+  const myGroup = groupData?.data;
   
   const loggedInUser = useAppSelector(currentUser);
   const [pushNotif, setPushNotif] = useState(true);
@@ -163,6 +171,17 @@ export default function ProfileTab({
             onClick={onEditProfile}
           />
           <View style={styles.listLineDivider} />
+          {myGroup && (
+            <>
+              <SettingsRow
+                icon={<BookOpen color={COLORS.primary} size={16} />}
+                label="My Group"
+                sub={`${myGroup.name} · Code: ${myGroup.inviteCode}`}
+                onClick={onViewGroupDetails}
+              />
+              <View style={styles.listLineDivider} />
+            </>
+          )}
           <SettingsRow
             icon={<Lock color={COLORS.primary} size={16} />}
             label="Change Password"
@@ -335,6 +354,8 @@ export default function ProfileTab({
           </View>
         </View>
       )}
+
+
     </ScrollView>
   );
 }

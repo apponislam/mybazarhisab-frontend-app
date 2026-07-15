@@ -35,6 +35,7 @@ import BillDetailScreen from './BillDetailScreen';
 import BillEditScreen from './BillEditScreen';
 import EditProfileScreen from './EditProfileScreen';
 import ChangePasswordScreen from './ChangePasswordScreen';
+import GroupDetailsScreen from './GroupDetailsScreen';
 
 const { width } = Dimensions.get('window');
 
@@ -94,7 +95,8 @@ type AppSubScreenType =
   | 'bill-detail'
   | 'bill-edit'
   | 'profile-edit'
-  | 'profile-change-password';
+  | 'profile-change-password'
+  | 'profile-group-details';
 
 export default function HomeScreen() {
   // Navigation & Screen states
@@ -278,6 +280,10 @@ export default function HomeScreen() {
     return <ChangePasswordScreen onBack={() => setSubScreen(null)} />;
   }
 
+  if (subScreen === 'profile-group-details') {
+    return <GroupDetailsScreen onBack={() => setSubScreen(null)} />;
+  }
+
   // Render Gate 3: Standard tab dashboard view
   const renderTabContent = () => {
     switch (tab) {
@@ -308,6 +314,7 @@ export default function HomeScreen() {
           <ProfileTab
             onEditProfile={() => setSubScreen('profile-edit')}
             onChangePassword={() => setSubScreen('profile-change-password')}
+            onViewGroupDetails={() => setSubScreen('profile-group-details')}
           />
         );
       default:

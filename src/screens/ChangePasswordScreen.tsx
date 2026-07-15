@@ -8,8 +8,10 @@ import {
   ScrollView,
   ActivityIndicator,
   Platform,
+  Alert,
 } from 'react-native';
 import { COLORS, SPACING, SIZES, SHADOWS } from '../constants/theme';
+import { useChangePasswordMutation } from '../redux/features/auth/authApi';
 import { ArrowLeft, Lock, Eye, EyeOff, CheckCircle } from '../components/CustomIcon';
 
 interface ChangePasswordScreenProps {
@@ -56,17 +58,35 @@ export default function ChangePasswordScreen({ onBack }: ChangePasswordScreenPro
     return 'transparent';
   };
 
-  const handleSubmit = () => {
+  const [changePasswordApi] = useChangePasswordMutation();
+
+  const handleSubmit = async () => {
     if (mismatch || newPass.length < 8 || !current) return;
     setLoading(true);
-    setTimeout(() => {
+    try {
+      const res = await changePasswordApi({
+        currentPassword: current,
+        newPassword: newPass,
+      }).unwrap();
+
+      if (res.success) {
+        setDone(true);
+        setTimeout(() => {
+          setDone(false);
+          onBack();
+        }, 1500);
+      } else {
+        Alert.alert('Error', res.message || 'Failed to change password');
+      }
+    } catch (error: any) {
+      console.error('Failed to change password:', error);
+      Alert.alert(
+        'Error',
+        error?.data?.message || 'An error occurred while changing password'
+      );
+    } finally {
       setLoading(false);
-      setDone(true);
-      setTimeout(() => {
-        setDone(false);
-        onBack();
-      }, 1500);
-    }, 1200);
+    }
   };
 
   const sl = getPasswordStrength(newPass);
