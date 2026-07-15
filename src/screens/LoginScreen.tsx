@@ -857,15 +857,25 @@ export default function LoginScreen() {
       nextOtp[i] = cleanVal;
       setOtp(nextOtp);
 
-      // Auto focus next
+      // Auto focus next if typed
       if (cleanVal && i < 5) {
         otpRefs.current[i + 1]?.focus();
+      }
+      // Auto focus previous if backspaced/cleared
+      else if (!cleanVal && i > 0) {
+        otpRefs.current[i - 1]?.focus();
       }
     };
 
     const handleOtpKeyPress = (i: number, key: string) => {
-      if (key === 'Backspace' && !otp[i] && i > 0) {
-        otpRefs.current[i - 1]?.focus();
+      if (key === 'Backspace' && i > 0) {
+        if (!otp[i]) {
+          // If current is empty, clear the previous and focus it
+          const nextOtp = [...otp];
+          nextOtp[i - 1] = '';
+          setOtp(nextOtp);
+          otpRefs.current[i - 1]?.focus();
+        }
       }
     };
 
