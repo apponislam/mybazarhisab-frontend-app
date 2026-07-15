@@ -17,7 +17,14 @@ import {
 import { COLORS, SPACING, SIZES, SHADOWS } from '../constants/theme';
 import { useAppDispatch } from '../redux/hooks';
 import { login } from '../redux/features/auth/authSlice';
-import { useLoginMutation, useRegisterMutation } from '../redux/features/auth/authApi';
+import {
+  useLoginMutation,
+  useRegisterMutation,
+  useForgotPasswordMutation,
+  useVerifyOtpMutation,
+  useResendOtpMutation,
+  useResetPasswordMutation,
+} from '../redux/features/auth/authApi';
 // Force Babel / react-native-dotenv cache refresh for Cloudinary keys
 import { CLOUDINARY_CLOUD_NAME, CLOUDINARY_UPLOAD_PRESET } from '@env';
 import { launchImageLibrary } from 'react-native-image-picker';
@@ -51,7 +58,13 @@ export default function LoginScreen() {
   const dispatch = useAppDispatch();
   const [loginApi] = useLoginMutation();
   const [registerApi] = useRegisterMutation();
+  const [forgotPasswordApi] = useForgotPasswordMutation();
+  const [verifyOtpApi] = useVerifyOtpMutation();
+  const [resendOtpApi] = useResendOtpMutation();
+  const [resetPasswordApi] = useResetPasswordMutation();
+
   const [screen, setScreen] = useState<ScreenState>('login');
+  const [resetToken, setResetToken] = useState('');
 
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error'; visible: boolean }>({
     message: '',
@@ -225,35 +238,85 @@ export default function LoginScreen() {
   };
 
   // Handle Send OTP click
-  const handleSendOtp = () => {
+  const handleSendOtp = async () => {
     if (!forgotEmail.trim()) return;
     setLoading(true);
-    setTimeout(() => {
+    try {
+      const res = await forgotPasswordApi({ email: forgotEmail.trim() }).unwrap();
+      if (res?.success) {
+        showToast(res.message || 'Password reset OTP sent to email', 'success');
+        setTimer(30);
+        setScreen('forgot-otp');
+      } else {
+        showToast(res?.message || 'Failed to send OTP', 'error');
+      }
+    } catch (err: any) {
+      console.log('Send OTP error:', err);
+      showToast(err?.data?.message || err?.message || 'Failed to send OTP', 'error');
+    } finally {
       setLoading(false);
-      setTimer(30);
-      setScreen('forgot-otp');
-    }, 1500);
+    }
   };
 
   // Handle OTP verification
-  const handleVerifyOtp = () => {
-    const filled = otp.every(d => d !== '');
-    if (!filled) return;
+  const handleVerifyOtp = async () => {
+    const otpString = otp.join('');
+    if (otpString.length < 6) return;
     setLoading(true);
-    setTimeout(() => {
+    try {
+      const res = await verifyOtpApi({ email: forgotEmail.trim(), otp: otpString }).unwrap();
+      if (res?.success) {
+        setResetToken(res.data.token);
+        showToast(res.message || 'OTP verified successfully', 'success');
+        setScreen('forgot-newpass');
+      } else {
+        showToast(res?.message || 'Invalid OTP', 'error');
+      }
+    } catch (err: any) {
+      console.log('Verify OTP error:', err);
+      showToast(err?.data?.message || err?.message || 'Invalid OTP', 'error');
+    } finally {
       setLoading(false);
-      setScreen('forgot-newpass');
-    }, 1500);
+    }
+  };
+
+  // Handle Resend OTP click
+  const handleResendOtp = async () => {
+    setLoading(true);
+    try {
+      const res = await resendOtpApi({ email: forgotEmail.trim() }).unwrap();
+      if (res?.success) {
+        showToast(res.message || 'OTP resent successfully', 'success');
+        setTimer(30);
+      } else {
+        showToast(res?.message || 'Failed to resend OTP', 'error');
+      }
+    } catch (err: any) {
+      console.log('Resend OTP error:', err);
+      showToast(err?.data?.message || err?.message || 'Failed to resend OTP', 'error');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Handle Reset Password submission
-  const handleResetPassword = () => {
+  const handleResetPassword = async () => {
     if (password.length < 8 || password !== repeatPassword) return;
     setLoading(true);
-    setTimeout(() => {
+    try {
+      const res = await resetPasswordApi({ token: resetToken, newPassword: password }).unwrap();
+      if (res?.success) {
+        showToast(res.message || 'Password reset successful', 'success');
+        setScreen('forgot-success');
+      } else {
+        showToast(res?.message || 'Failed to reset password', 'error');
+      }
+    } catch (err: any) {
+      console.log('Reset password error:', err);
+      showToast(err?.data?.message || err?.message || 'Failed to reset password', 'error');
+    } finally {
       setLoading(false);
-      setScreen('forgot-success');
-    }, 1500);
+    }
   };
 
   // Password strength calculation helper
@@ -762,7 +825,11 @@ export default function LoginScreen() {
         </View>
 
         <TouchableOpacity
-          style={[styles.primaryButton, styles.bottomFixedBtn]}
+          style={[
+            styles.primaryButton,
+            styles.bottomFixedBtn,
+            (loading || !forgotEmail.trim()) && styles.primaryButtonDisabled
+          ]}
           onPress={handleSendOtp}
           disabled={loading || !forgotEmail.trim()}
           activeOpacity={0.8}
@@ -861,7 +928,7 @@ export default function LoginScreen() {
               </Text>
             ) : (
               <TouchableOpacity
-                onPress={() => setTimer(30)}
+                onPress={handleResendOtp}
                 activeOpacity={0.7}
               >
                 <Text style={styles.resendLink}>Resend OTP</Text>
@@ -870,7 +937,11 @@ export default function LoginScreen() {
           </View>
 
           <TouchableOpacity
-            style={[styles.primaryButton, styles.bottomFixedBtn]}
+            style={[
+              styles.primaryButton,
+              styles.bottomFixedBtn,
+              (loading || !filled) && styles.primaryButtonDisabled
+            ]}
             onPress={handleVerifyOtp}
             disabled={loading || !filled}
             activeOpacity={0.8}
@@ -1023,7 +1094,11 @@ export default function LoginScreen() {
           </View>
 
           <TouchableOpacity
-            style={[styles.primaryButton, styles.bottomFixedBtn]}
+            style={[
+              styles.primaryButton,
+              styles.bottomFixedBtn,
+              (loading || mismatch || password.length < 8 || !repeatPassword) && styles.primaryButtonDisabled
+            ]}
             onPress={handleResetPassword}
             disabled={
               loading || mismatch || password.length < 8 || !repeatPassword
