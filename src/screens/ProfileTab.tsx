@@ -11,8 +11,8 @@ import {
   Image,
 } from 'react-native';
 import { COLORS, SPACING, SIZES, SHADOWS } from '../constants/theme';
-import { useAppDispatch } from '../redux/hooks';
-import { logout } from '../redux/features/auth/authSlice';
+import { useAppDispatch, useAppSelector } from '../redux/hooks';
+import { logout, currentUser } from '../redux/features/auth/authSlice';
 import {
   User,
   Lock,
@@ -84,16 +84,18 @@ export default function ProfileTab({
   onChangePassword,
 }: ProfileTabProps) {
   const dispatch = useAppDispatch();
+  const loggedInUser = useAppSelector(currentUser);
   const [pushNotif, setPushNotif] = useState(true);
   const [emailNotif, setEmailNotif] = useState(true);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  // Mock user matching web App.tsx MOCK_USERS[0]
+  // User matching redux state
   const me = {
-    id: 'u1',
-    name: 'Ahmed Hassan',
-    email: 'ahmed@email.com',
-    phone: '+880 1711 234567',
+    id: loggedInUser?._id || 'unknown',
+    name: loggedInUser?.name || 'User',
+    email: loggedInUser?.email || '',
+    phone: loggedInUser?.phone || '',
+    profileImage: loggedInUser?.profileImage,
   };
 
   const handleSignOut = () => {

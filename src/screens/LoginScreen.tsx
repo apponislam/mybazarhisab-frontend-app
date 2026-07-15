@@ -12,10 +12,14 @@ import {
   Dimensions,
   ActivityIndicator,
   Image,
+  Alert,
 } from 'react-native';
 import { COLORS, SPACING, SIZES, SHADOWS } from '../constants/theme';
 import { useAppDispatch } from '../redux/hooks';
 import { login } from '../redux/features/auth/authSlice';
+import { useLoginMutation, useRegisterMutation } from '../redux/features/auth/authApi';
+// Force Babel / react-native-dotenv cache refresh for Cloudinary keys
+import { CLOUDINARY_CLOUD_NAME, CLOUDINARY_UPLOAD_PRESET } from '@env';
 import {
   Mail,
   Lock,
@@ -30,6 +34,7 @@ import {
   Camera,
   Plus,
 } from '../components/CustomIcon';
+import Toast from '../components/Toast';
 
 const { width } = Dimensions.get('window');
 
@@ -43,7 +48,23 @@ type ScreenState =
 
 export default function LoginScreen() {
   const dispatch = useAppDispatch();
+  const [loginApi] = useLoginMutation();
+  const [registerApi] = useRegisterMutation();
   const [screen, setScreen] = useState<ScreenState>('login');
+
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error'; visible: boolean }>({
+    message: '',
+    type: 'success',
+    visible: false,
+  });
+
+  const showToast = (message: string, type: 'success' | 'error') => {
+    setToast({ message, type, visible: true });
+  };
+
+  const hideToast = () => {
+    setToast(prev => ({ ...prev, visible: false }));
+  };
 
   // Input Fields
   const [email, setEmail] = useState('');
@@ -78,18 +99,62 @@ export default function LoginScreen() {
     return () => clearInterval(interval);
   }, [screen, timer]);
 
+  // Upload to Cloudinary helper
+  const uploadToCloudinary = async (): Promise<string | undefined> => {
+    try {
+      console.log('Uploading default photo to Cloudinary...');
+      const data = new FormData();
+      const defaultPhotoUrl = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=500';
+      data.append('file', defaultPhotoUrl);
+      data.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+        method: 'POST',
+        body: data,
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      const resData = await res.json();
+      if (resData.secure_url) {
+        console.log('Cloudinary upload success:', resData.secure_url);
+        return resData.secure_url;
+      } else {
+        console.warn('Cloudinary upload warning:', resData);
+        return undefined;
+      }
+    } catch (uploadError) {
+      console.error('Cloudinary upload error:', uploadError);
+      return undefined;
+    }
+  };
+
   // Handle Login submission
-  const handleLoginSubmit = () => {
+  const handleLoginSubmit = async () => {
     if (!email.trim() || !password.trim()) return;
     setLoading(true);
-    setTimeout(() => {
+    try {
+      const res = await loginApi({ email: email.trim(), password }).unwrap();
+      if (res?.success) {
+        showToast('Login successful!', 'success');
+        setTimeout(() => {
+          dispatch(login({ user: res.data.user, token: res.data.accessToken }));
+        }, 800);
+      } else {
+        showToast(res?.message || 'Login failed', 'error');
+      }
+    } catch (err: any) {
+      console.log('Login error:', err);
+      showToast(err?.data?.message || err?.message || 'An error occurred during login', 'error');
+    } finally {
       setLoading(false);
-      dispatch(login({ email, token: 'mock-jwt-token' }));
-    }, 1500);
+    }
   };
 
   // Handle Register submission
-  const handleRegisterSubmit = () => {
+  const handleRegisterSubmit = async () => {
     if (
       !name.trim() ||
       !email.trim() ||
@@ -99,10 +164,38 @@ export default function LoginScreen() {
     )
       return;
     setLoading(true);
-    setTimeout(() => {
+    try {
+      let profileImageUrl = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=500';
+      if (photoSelected) {
+        const uploadedUrl = await uploadToCloudinary();
+        if (uploadedUrl) {
+          profileImageUrl = uploadedUrl;
+        }
+      }
+      
+      const payload = {
+        name: name.trim(),
+        email: email.trim(),
+        password,
+        phone: phone.trim(),
+        profileImage: profileImageUrl,
+      };
+
+      const res = await registerApi(payload).unwrap();
+      if (res?.success) {
+        showToast('Registration successful!', 'success');
+        setTimeout(() => {
+          dispatch(login({ user: res.data.user, token: res.data.accessToken }));
+        }, 800);
+      } else {
+        showToast(res?.message || 'Registration failed', 'error');
+      }
+    } catch (err: any) {
+      console.log('Register error:', err);
+      showToast(err?.data?.message || err?.message || 'An error occurred during registration', 'error');
+    } finally {
       setLoading(false);
-      dispatch(login({ email, token: 'mock-jwt-token' }));
-    }, 1600);
+    }
   };
 
   // Handle Send OTP click
@@ -994,6 +1087,13 @@ export default function LoginScreen() {
       >
         {getActiveScreenRenderer()}
       </ScrollView>
+
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        visible={toast.visible}
+        onHide={hideToast}
+      />
     </KeyboardAvoidingView>
   );
 }

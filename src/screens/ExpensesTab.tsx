@@ -5,6 +5,7 @@ import {
   Text,
   FlatList,
   TouchableOpacity,
+  Image,
 } from 'react-native';
 import { COLORS, SPACING, SIZES, SHADOWS } from '../constants/theme';
 import { ChevronRight } from '../components/CustomIcon';
@@ -16,6 +17,7 @@ export interface MockUser {
   name: string;
   email: string;
   phone: string;
+  profileImage?: string;
 }
 
 export interface MockProduct {
@@ -58,6 +60,18 @@ export function avatarColor(id: string) {
 
 // Avatar Component
 export function Avatar({ user, size = 36 }: { user: MockUser; size?: number }) {
+  if (user.profileImage) {
+    return (
+      <Image
+        source={{ uri: user.profileImage }}
+        style={{
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+        }}
+      />
+    );
+  }
   const bgColor = avatarColor(user.id);
   return (
     <View

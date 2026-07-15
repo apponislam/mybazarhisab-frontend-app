@@ -17,7 +17,7 @@ import { baseApi } from './api/baseApi';
 const persistAuthConfigure = {
   key: 'auth',
   storage: AsyncStorage,
-  whitelist: ['isLoggedIn', 'userEmail', 'token'],
+  whitelist: ['isLoggedIn', 'user', 'token'],
 };
 
 const persistLedgerConfigure = {
