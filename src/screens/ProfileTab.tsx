@@ -13,6 +13,7 @@ import {
 import { COLORS, SPACING, SIZES, SHADOWS } from '../constants/theme';
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
 import { logout, currentUser } from '../redux/features/auth/authSlice';
+import { useGetMeQuery } from '../redux/features/auth/authApi';
 import {
   User,
   Lock,
@@ -84,6 +85,10 @@ export default function ProfileTab({
   onChangePassword,
 }: ProfileTabProps) {
   const dispatch = useAppDispatch();
+  
+  // Fetch fresh profile info
+  useGetMeQuery(undefined, { refetchOnMountOrArgChange: true });
+  
   const loggedInUser = useAppSelector(currentUser);
   const [pushNotif, setPushNotif] = useState(true);
   const [emailNotif, setEmailNotif] = useState(true);
@@ -232,20 +237,32 @@ export default function ProfileTab({
           <SettingsRow
             icon={<Plus color={COLORS.primary} size={16} />}
             label="Language"
-            sub="English"
-            right={<Text style={styles.langCode}>EN</Text>}
+            sub={loggedInUser?.language === 'bn' ? 'Bangla' : 'English'}
+            right={<Text style={styles.langCode}>{(loggedInUser?.language || 'EN').toUpperCase()}</Text>}
           />
           <View style={styles.listLineDivider} />
           <SettingsRow
             icon={<Plus color={COLORS.primary} size={16} />}
             label="Address"
-            sub="42 Mirpur Road, Dhaka, Bangladesh"
+            sub={
+              loggedInUser?.address
+                ? [
+                    loggedInUser.address.street,
+                    loggedInUser.address.city,
+                    loggedInUser.address.state,
+                    loggedInUser.address.zipCode,
+                    loggedInUser.address.country,
+                  ]
+                    .filter(Boolean)
+                    .join(', ')
+                : 'No address specified'
+            }
           />
           <View style={styles.listLineDivider} />
           <SettingsRow
             icon={<User color={COLORS.primary} size={16} />}
             label="About Me"
-            sub="Managing our family bazar hisab since 2024."
+            sub={loggedInUser?.aboutme || 'No description provided'}
           />
         </View>
       </View>

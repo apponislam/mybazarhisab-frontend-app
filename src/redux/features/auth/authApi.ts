@@ -1,5 +1,5 @@
 import { baseApi } from '../../api/baseApi';
-import { TUser } from './authSlice';
+import { TUser, updateUser } from './authSlice';
 
 interface AuthResponse {
   success: boolean;
@@ -56,6 +56,41 @@ export const authApi = baseApi.injectEndpoints({
         body,
       }),
     }),
+    getMe: builder.query<{ success: boolean; message: string; data: TUser }, void>({
+      query: () => ({
+        url: 'auth/me',
+        method: 'GET',
+      }),
+      providesTags: ['User'],
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          if (data.success && data.data) {
+            dispatch(updateUser(data.data));
+          }
+        } catch (err) {
+          // ignore
+        }
+      },
+    }),
+    updateProfile: builder.mutation<{ success: boolean; message: string; data: TUser }, Partial<TUser>>({
+      query: (profileData) => ({
+        url: 'auth/profile',
+        method: 'PATCH',
+        body: profileData,
+      }),
+      invalidatesTags: ['User'],
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          if (data.success && data.data) {
+            dispatch(updateUser(data.data));
+          }
+        } catch (err) {
+          // ignore
+        }
+      },
+    }),
   }),
 });
 
@@ -66,4 +101,6 @@ export const {
   useVerifyOtpMutation,
   useResendOtpMutation,
   useResetPasswordMutation,
+  useGetMeQuery,
+  useUpdateProfileMutation,
 } = authApi;

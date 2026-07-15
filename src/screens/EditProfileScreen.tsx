@@ -8,34 +8,42 @@ import {
   ScrollView,
   ActivityIndicator,
   Platform,
+  Alert,
+  Image,
 } from 'react-native';
 import { COLORS, SPACING, SIZES, SHADOWS } from '../constants/theme';
-import { ArrowLeft, User, Mail, Phone, Camera, CheckCircle } from '../components/CustomIcon';
+import { useAppSelector } from '../redux/hooks';
+import { currentUser } from '../redux/features/auth/authSlice';
+import { useUpdateProfileMutation } from '../redux/features/auth/authApi';
+import { launchImageLibrary } from 'react-native-image-picker';
+import { CLOUDINARY_CLOUD_NAME, CLOUDINARY_UPLOAD_PRESET } from '@env';
+import { ArrowLeft, User, Phone, Camera, CheckCircle } from '../components/CustomIcon';
 
 interface EditProfileScreenProps {
   onBack: () => void;
 }
 
 export default function EditProfileScreen({ onBack }: EditProfileScreenProps) {
-  const [photoSelected, setPhotoSelected] = useState(false);
-  const [name, setName] = useState('Ahmed Hassan');
-  const [email, setEmail] = useState('ahmed@email.com');
-  const [phone, setPhone] = useState('+880 1711 234567');
-  const [lang, setLang] = useState('English');
-  const [about, setAbout] = useState('Managing our family bazar hisab since 2024.');
+  const loggedInUser = useAppSelector(currentUser);
+  const [updateProfileApi] = useUpdateProfileMutation();
+
+  const [name, setName] = useState(loggedInUser?.name || '');
+  const [phone, setPhone] = useState(loggedInUser?.phone || '');
+  const [lang, setLang] = useState(loggedInUser?.language || 'en');
+  const [about, setAbout] = useState(loggedInUser?.aboutme || '');
   
-  const [street, setStreet] = useState('42 Mirpur Road');
-  const [city, setCity] = useState('Dhaka');
-  const [state, setState] = useState('Dhaka Division');
-  const [zip, setZip] = useState('1216');
-  const [country, setCountry] = useState('Bangladesh');
+  const [street, setStreet] = useState(loggedInUser?.address?.street || '');
+  const [city, setCity] = useState(loggedInUser?.address?.city || '');
+  const [state, setState] = useState(loggedInUser?.address?.state || '');
+  const [zip, setZip] = useState(loggedInUser?.address?.zipCode || '');
+  const [country, setCountry] = useState(loggedInUser?.address?.country || '');
+  const [profileImageUri, setProfileImageUri] = useState<string | null>(loggedInUser?.profileImage || null);
 
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
 
   // Focus states
   const [fName, setFName] = useState(false);
-  const [fEmail, setFEmail] = useState(false);
   const [fPhone, setFPhone] = useState(false);
   const [fLang, setFLang] = useState(false);
   const [fAbout, setFAbout] = useState(false);
@@ -46,16 +54,113 @@ export default function EditProfileScreen({ onBack }: EditProfileScreenProps) {
   const [fZip, setFZip] = useState(false);
   const [fCountry, setFCountry] = useState(false);
 
-  const handleSubmit = () => {
+  const handleChoosePhoto = () => {
+    launchImageLibrary({ mediaType: 'photo', quality: 0.8 }, (response) => {
+      if (response.didCancel) {
+        console.log('User cancelled image picker');
+      } else if (response.errorMessage) {
+        console.log('ImagePicker Error: ', response.errorMessage);
+        Alert.alert('Error', 'Failed to pick image');
+      } else if (response.assets && response.assets.length > 0) {
+        const asset = response.assets[0];
+        if (asset.uri) {
+          setProfileImageUri(asset.uri);
+        }
+      }
+    });
+  };
+
+  const uploadToCloudinary = async (): Promise<string | undefined> => {
+    if (!profileImageUri) return undefined;
+    try {
+      console.log('Uploading photo to Cloudinary:', profileImageUri);
+      const data = new FormData();
+      
+      const uriParts = profileImageUri.split('.');
+      const fileType = uriParts[uriParts.length - 1];
+      const fileName = `photo.${fileType}`;
+
+      data.append('file', {
+        uri: Platform.OS === 'android' ? profileImageUri : profileImageUri.replace('file://', ''),
+        type: `image/${fileType === 'png' ? 'png' : 'jpeg'}`,
+        name: fileName,
+      } as any);
+      data.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+        method: 'POST',
+        body: data,
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      const resData = await res.json();
+      if (resData.secure_url) {
+        console.log('Cloudinary upload success:', resData.secure_url);
+        return resData.secure_url;
+      } else {
+        console.warn('Cloudinary upload warning:', resData);
+        return undefined;
+      }
+    } catch (uploadError) {
+      console.error('Cloudinary upload error:', uploadError);
+      return undefined;
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!name.trim()) {
+      Alert.alert('Validation Error', 'Name is required');
+      return;
+    }
+
     setLoading(true);
-    setTimeout(() => {
+    try {
+      let finalImageUrl = profileImageUri;
+      
+      // If the image is a local URI, upload to Cloudinary first
+      if (profileImageUri && !profileImageUri.startsWith('http')) {
+        const uploadedUrl = await uploadToCloudinary();
+        if (uploadedUrl) {
+          finalImageUrl = uploadedUrl;
+        } else {
+          Alert.alert('Upload Failed', 'Failed to upload profile image, using default.');
+        }
+      }
+
+      const updateData = {
+        name: name.trim(),
+        phone: phone.trim() || undefined,
+        language: lang.trim() || undefined,
+        aboutme: about.trim() || undefined,
+        profileImage: finalImageUrl || undefined,
+        address: {
+          street: street.trim(),
+          city: city.trim(),
+          state: state.trim(),
+          zipCode: zip.trim(),
+          country: country.trim(),
+        },
+      };
+
+      const res = await updateProfileApi(updateData).unwrap();
+      if (res.success) {
+        setSaved(true);
+        setTimeout(() => {
+          setSaved(false);
+          onBack();
+        }, 1500);
+      } else {
+        Alert.alert('Error', res.message || 'Failed to update profile');
+      }
+    } catch (error: any) {
+      console.error('Failed to update profile:', error);
+      Alert.alert('Error', error?.data?.message || 'An error occurred while updating profile');
+    } finally {
       setLoading(false);
-      setSaved(true);
-      setTimeout(() => {
-        setSaved(false);
-        onBack();
-      }, 1500);
-    }, 1200);
+    }
   };
 
   const renderField = (
@@ -100,20 +205,23 @@ export default function EditProfileScreen({ onBack }: EditProfileScreenProps) {
           </Text>
         </View>
 
-        {/* Mock Photo picker */}
+        {/* Photo picker */}
         <View style={styles.photoPickerContainer}>
           <TouchableOpacity
             style={styles.photoPickerCircle}
-            onPress={() => setPhotoSelected(!photoSelected)}
+            onPress={handleChoosePhoto}
             activeOpacity={0.8}
           >
-            {photoSelected ? (
-              <View style={[styles.avatarCircle, { backgroundColor: '#3d7a5c' }]}>
-                <Text style={styles.avatarInitials}>AH</Text>
-              </View>
+            {profileImageUri ? (
+              <Image
+                source={{ uri: profileImageUri }}
+                style={styles.avatarImage}
+              />
             ) : (
               <View style={[styles.avatarCircle, { backgroundColor: '#c06010' }]}>
-                <Text style={styles.avatarInitials}>AH</Text>
+                <Text style={styles.avatarInitials}>
+                  {name ? name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'U'}
+                </Text>
               </View>
             )}
             <View style={styles.cameraBadge}>
@@ -129,7 +237,6 @@ export default function EditProfileScreen({ onBack }: EditProfileScreenProps) {
         </View>
 
         {renderField('Full Name', name, setName, fName, setFName, <User color={COLORS.textSecondary} size={16} />)}
-        {renderField('Email Address', email, setEmail, fEmail, setFEmail, <Mail color={COLORS.textSecondary} size={16} />, 'email-address')}
         {renderField('Phone Number', phone, setPhone, fPhone, setFPhone, <Phone color={COLORS.textSecondary} size={16} />, 'phone-pad')}
         {renderField('Language', lang, setLang, fLang, setFLang, <User color={COLORS.textSecondary} size={16} />)}
         
@@ -243,6 +350,11 @@ const styles = StyleSheet.create({
     borderRadius: 44,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  avatarImage: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
   },
   avatarInitials: {
     fontSize: 28,

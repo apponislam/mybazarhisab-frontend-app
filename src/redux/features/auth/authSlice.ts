@@ -8,6 +8,20 @@ export type TUser = {
   phone?: string;
   profileImage?: string;
   role?: string;
+  language?: string;
+  aboutme?: string;
+  address?: {
+    street?: string;
+    city?: string;
+    state?: string;
+    zipCode?: string;
+    country?: string;
+  };
+  isActive?: boolean;
+  isEmailVerified?: boolean;
+  isDeleted?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 type TAuthState = {
@@ -50,10 +64,13 @@ const authSlice = createSlice({
     setHasGroup: (state, action: PayloadAction<boolean>) => {
       state.hasGroup = action.payload;
     },
+    updateUser: (state, action: PayloadAction<TUser>) => {
+      state.user = action.payload;
+    },
   },
 });
 
-export const { login, logout, setHasGroup } = authSlice.actions;
+export const { login, logout, setHasGroup, updateUser } = authSlice.actions;
 export default authSlice.reducer;
 
 // Selectors matching letanest style
