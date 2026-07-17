@@ -11,19 +11,43 @@ import {
   Platform,
 } from 'react-native';
 import { COLORS, SPACING, SIZES, SHADOWS } from '../constants/theme';
-import { ArrowLeft, X, Plus } from '../components/CustomIcon';
+import { ArrowLeft, X, Plus, Calendar } from '../components/CustomIcon';
 import { MockBill, BillCategory, BILL_CATEGORIES, BILL_META } from './BillsTab';
+import { useCreateBillMutation } from '../redux/features/bill/billApi';
 
 interface AddBillScreenProps {
   onBack: () => void;
   onDone: (bill: MockBill) => void;
 }
 
+// Format a Date to YYYY-MM-DD
+function formatDateYMD(d: Date): string {
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+// Format a Date to human-readable display
+function formatDateDisplay(d: Date): string {
+  const today = new Date();
+  const isToday =
+    d.getFullYear() === today.getFullYear() &&
+    d.getMonth() === today.getMonth() &&
+    d.getDate() === today.getDate();
+
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const dayStr = `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+
+  return isToday ? `Today — ${dayStr}` : dayStr;
+}
+
 export default function AddBillScreen({ onBack, onDone }: AddBillScreenProps) {
   const [category, setCategory] = useState<BillCategory>('RENT');
   const [title, setTitle] = useState('');
   const [amount, setAmount] = useState('');
-  const [date, setDate] = useState('Today, ' + new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }));
+  const [date, setDate] = useState(new Date());
+  const [dateText, setDateText] = useState(formatDateYMD(new Date()));
   const [notes, setNotes] = useState('');
   
   const [loading, setLoading] = useState(false);
@@ -33,22 +57,47 @@ export default function AddBillScreen({ onBack, onDone }: AddBillScreenProps) {
   const [fTitle, setFTitle] = useState(false);
   const [fAmount, setFAmount] = useState(false);
   const [fNotes, setFNotes] = useState(false);
+  const [fDate, setFDate] = useState(false);
+
+  // RTK Query hook
+  const [createBill, { isLoading: isCreating }] = useCreateBillMutation();
 
   const activeMeta = BILL_META[category];
 
-  const handleSubmit = () => {
+  // Handle date text change
+  const handleDateChange = (text: string) => {
+    setDateText(text);
+    const parsed = new Date(text);
+    if (!isNaN(parsed.getTime()) && text.length === 10) {
+      setDate(parsed);
+    }
+  };
+
+  const handleSubmit = async () => {
     if (!title.trim() || !amount) return;
 
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      const payload: any = {
+        category,
+        title: title.trim(),
+        amount: Number(amount),
+        date: formatDateYMD(date),
+      };
 
+      if (notes.trim()) {
+        payload.notes = notes.trim();
+      }
+
+      await createBill(payload).unwrap();
+
+      // Create local entry for immediate UI update
       const newBill: MockBill = {
         id: 'b_' + Date.now(),
         category,
         title: title.trim(),
         amount: Number(amount),
-        date: 'Today, ' + new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }),
+        date: formatDateDisplay(date),
         notes: notes.trim() || undefined,
         user: {
           id: 'u1',
@@ -59,8 +108,12 @@ export default function AddBillScreen({ onBack, onDone }: AddBillScreenProps) {
       };
 
       onDone(newBill);
-    }, 1400);
+    } catch (err) {
+      setLoading(false);
+    }
   };
+
+  const isFormValid = title.trim() && amount;
 
   return (
     <View style={styles.container}>
@@ -143,6 +196,24 @@ export default function AddBillScreen({ onBack, onDone }: AddBillScreenProps) {
             </View>
           </View>
 
+          {/* Date Field */}
+          <View style={styles.fieldBox}>
+            <Text style={styles.fieldLabel}>Date</Text>
+            <View style={[styles.inputWrapper, fDate && styles.inputWrapperFocused]}>
+              <Calendar color={COLORS.textSecondary} size={18} style={styles.fieldIcon} />
+              <TextInput
+                style={styles.textInput}
+                placeholder="YYYY-MM-DD"
+                placeholderTextColor={COLORS.placeholder}
+                value={dateText}
+                onChangeText={handleDateChange}
+                onFocus={() => setFDate(true)}
+                onBlur={() => setFDate(false)}
+              />
+            </View>
+            <Text style={styles.dateHint}>{formatDateDisplay(date)}</Text>
+          </View>
+
           {/* Notes (Optional) */}
           <View style={styles.fieldBox}>
             <Text style={styles.fieldLabel}>Notes (optional)</Text>
@@ -164,12 +235,16 @@ export default function AddBillScreen({ onBack, onDone }: AddBillScreenProps) {
 
           {/* Submit */}
           <TouchableOpacity
-            style={[styles.primaryButton, { backgroundColor: COLORS.accent }]}
+            style={[
+              styles.primaryButton,
+              { backgroundColor: COLORS.accent },
+              (!isFormValid || loading || isCreating) && styles.primaryButtonDisabled,
+            ]}
             onPress={handleSubmit}
-            disabled={loading || !title.trim() || !amount}
+            disabled={loading || isCreating || !isFormValid}
             activeOpacity={0.8}
           >
-            {loading ? (
+            {(loading || isCreating) ? (
               <ActivityIndicator color="#fff" size="small" />
             ) : (
               <Text style={styles.primaryButtonText}>Save Bill</Text>
@@ -371,6 +446,13 @@ const styles = StyleSheet.create({
     paddingVertical: 0,
     fontFamily: 'sans-serif',
   },
+  dateHint: {
+    fontSize: 11,
+    color: COLORS.textSecondary,
+    fontFamily: 'sans-serif',
+    marginTop: 4,
+    paddingHorizontal: 4,
+  },
   textAreaWrapper: {
     height: 96,
     paddingVertical: 12,
@@ -386,6 +468,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 12,
     ...SHADOWS.md,
+  },
+  primaryButtonDisabled: {
+    opacity: 0.5,
   },
   primaryButtonText: {
     color: '#fff',
