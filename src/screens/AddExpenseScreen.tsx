@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
   StyleSheet,
   View,
@@ -8,10 +8,15 @@ import {
   ScrollView,
   ActivityIndicator,
   Platform,
+  FlatList,
+  Image,
+  Keyboard,
 } from 'react-native';
 import { COLORS, SPACING, SIZES, SHADOWS } from '../constants/theme';
-import { ArrowLeft, Package } from '../components/CustomIcon';
+import { ArrowLeft, Package, X, ChevronDown } from '../components/CustomIcon';
 import { MockBazarEntry, BazarUnit } from './ExpensesTab';
+import { useLazySearchProductsQuery, ProductItem } from '../redux/features/product/productApi';
+import { useCreateBazarEntryMutation } from '../redux/features/bazarEntry/bazarEntryApi';
 
 interface AddExpenseScreenProps {
   onBack: () => void;
@@ -34,14 +39,31 @@ function getEmojiForProduct(name: string): string {
   return '🛒'; // default
 }
 
+// Format today's date as YYYY-MM-DD
+function getTodayDate(): string {
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
 export default function AddExpenseScreen({ onBack, onDone }: AddExpenseScreenProps) {
+  // Form state
   const [productName, setProductName] = useState('');
+  const [selectedProduct, setSelectedProduct] = useState<ProductItem | null>(null);
   const [price, setPrice] = useState('');
   const [quantity, setQuantity] = useState('');
   const [unit, setUnit] = useState<BazarUnit>('KG');
-  const [date, setDate] = useState('Today, ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Search dropdown state
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [searchPage, setSearchPage] = useState(1);
+  const [allProducts, setAllProducts] = useState<ProductItem[]>([]);
+  const [hasMore, setHasMore] = useState(false);
+  const [totalResults, setTotalResults] = useState(0);
 
   // Focus States
   const [fProduct, setFProduct] = useState(false);
@@ -49,17 +71,123 @@ export default function AddExpenseScreen({ onBack, onDone }: AddExpenseScreenPro
   const [fQty, setFQty] = useState(false);
   const [fNotes, setFNotes] = useState(false);
 
-  const handleSubmit = () => {
+  // Debounce timer ref
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // RTK Query hooks
+  const [searchProducts, { isFetching: isSearching }] = useLazySearchProductsQuery();
+  const [createBazarEntry, { isLoading: isCreating }] = useCreateBazarEntryMutation();
+
+  // Debounced search handler
+  const handleProductSearch = useCallback((text: string) => {
+    setProductName(text);
+    setSelectedProduct(null); // Clear selected product when typing
+
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+
+    if (text.trim().length < 2) {
+      setShowDropdown(false);
+      setAllProducts([]);
+      setSearchPage(1);
+      return;
+    }
+
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const result = await searchProducts({
+          searchTerm: text.trim(),
+          page: 1,
+          limit: 10,
+        }).unwrap();
+
+        setAllProducts(result.data || []);
+        setHasMore(result.meta?.hasNext || false);
+        setTotalResults(result.meta?.total || 0);
+        setSearchPage(1);
+        setShowDropdown(true);
+      } catch (err) {
+        // Search failed silently — user can still type custom name
+        setAllProducts([]);
+        setShowDropdown(true);
+      }
+    }, 400);
+  }, [searchProducts]);
+
+  // Load more products (lazy loading / pagination)
+  const handleLoadMore = useCallback(async () => {
+    if (!hasMore || isSearching) return;
+
+    const nextPage = searchPage + 1;
+    try {
+      const result = await searchProducts({
+        searchTerm: productName.trim(),
+        page: nextPage,
+        limit: 10,
+      }).unwrap();
+
+      setAllProducts((prev) => [...prev, ...(result.data || [])]);
+      setHasMore(result.meta?.hasNext || false);
+      setSearchPage(nextPage);
+    } catch (err) {
+      // Silently fail
+    }
+  }, [hasMore, isSearching, searchPage, productName, searchProducts]);
+
+  // Select product from dropdown
+  const handleSelectProduct = (product: ProductItem) => {
+    setSelectedProduct(product);
+    setProductName(product.name);
+    setShowDropdown(false);
+    Keyboard.dismiss();
+  };
+
+  // Use custom name (no product selected from DB)
+  const handleUseCustomName = () => {
+    setSelectedProduct(null);
+    setShowDropdown(false);
+    Keyboard.dismiss();
+  };
+
+  // Clear selected product
+  const handleClearProduct = () => {
+    setSelectedProduct(null);
+    setProductName('');
+    setShowDropdown(false);
+    setAllProducts([]);
+  };
+
+  // Submit handler — POST to API
+  const handleSubmit = async () => {
     if (!productName.trim() || !price || !quantity) return;
-    
+
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      
+    try {
+      const payload: any = {
+        name: productName.trim(),
+        price: Number(price),
+        quantity: Number(quantity),
+        unit,
+        date: getTodayDate(),
+      };
+
+      // If a product was selected from search, include the productId
+      if (selectedProduct) {
+        payload.productId = selectedProduct._id;
+      }
+
+      if (notes.trim()) {
+        payload.notes = notes.trim();
+      }
+
+      await createBazarEntry(payload).unwrap();
+
+      // Create local entry for immediate UI update via onDone
       const newEntry: MockBazarEntry = {
         id: 'e_' + Date.now(),
         product: {
-          id: 'p_' + Date.now(),
+          id: selectedProduct?._id || 'p_' + Date.now(),
           name: productName.trim(),
           emoji: getEmojiForProduct(productName),
         },
@@ -75,10 +203,50 @@ export default function AddExpenseScreen({ onBack, onDone }: AddExpenseScreenPro
           phone: '+880 1711 234567',
         },
       };
-      
+
       onDone(newEntry);
-    }, 1400);
+    } catch (err) {
+      // If API fails, still show as local entry for now
+      setLoading(false);
+    }
   };
+
+  // Cleanup debounce on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
+
+  // Render a single product result row
+  const renderProductItem = ({ item }: { item: ProductItem }) => (
+    <TouchableOpacity
+      style={styles.dropdownItem}
+      onPress={() => handleSelectProduct(item)}
+      activeOpacity={0.7}
+    >
+      {item.photo ? (
+        <Image source={{ uri: item.photo }} style={styles.productPhoto} />
+      ) : (
+        <View style={styles.productPhotoPlaceholder}>
+          <Package color={COLORS.textSecondary} size={16} />
+        </View>
+      )}
+      <View style={styles.productInfo}>
+        <Text style={styles.productItemName} numberOfLines={1}>{item.name}</Text>
+        {item.description ? (
+          <Text style={styles.productItemDesc} numberOfLines={1}>{item.description}</Text>
+        ) : null}
+      </View>
+      {item.is18Plus && (
+        <View style={styles.adultBadge}>
+          <Text style={styles.adultBadgeText}>18+</Text>
+        </View>
+      )}
+    </TouchableOpacity>
+  );
+
+  const isFormValid = productName.trim() && price && quantity;
 
   return (
     <View style={styles.container}>
@@ -88,7 +256,11 @@ export default function AddExpenseScreen({ onBack, onDone }: AddExpenseScreenPro
         <Text style={styles.backButtonText}>Cancel</Text>
       </TouchableOpacity>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        nestedScrollEnabled
+      >
         {/* Header */}
         <View style={styles.screenHeader}>
           <View style={styles.iconCircleHeader}>
@@ -102,22 +274,103 @@ export default function AddExpenseScreen({ onBack, onDone }: AddExpenseScreenPro
 
         {/* Form Fields */}
         <View style={styles.formContainer}>
-          {/* Product Name */}
+          {/* Product Name with Search Dropdown */}
           <View style={styles.fieldBox}>
             <Text style={styles.fieldLabel}>Product Name</Text>
             <View style={[styles.inputWrapper, fProduct && styles.inputWrapperFocused]}>
-              <Package color={COLORS.textSecondary} size={18} style={styles.fieldIcon} />
+              {selectedProduct?.photo ? (
+                <Image source={{ uri: selectedProduct.photo }} style={styles.selectedProductThumb} />
+              ) : (
+                <Package color={COLORS.textSecondary} size={18} style={styles.fieldIcon} />
+              )}
               <TextInput
                 style={styles.textInput}
-                placeholder="e.g. Hilsha Fish, Rice, Onion"
+                placeholder="Search or type product name…"
                 placeholderTextColor={COLORS.placeholder}
                 value={productName}
-                onChangeText={setProductName}
-                onFocus={() => setFProduct(true)}
+                onChangeText={handleProductSearch}
+                onFocus={() => {
+                  setFProduct(true);
+                  if (productName.trim().length >= 2 && !selectedProduct) {
+                    setShowDropdown(true);
+                  }
+                }}
                 onBlur={() => setFProduct(false)}
                 autoCorrect={false}
               />
+              {productName.length > 0 && (
+                <TouchableOpacity onPress={handleClearProduct} style={styles.clearBtn} activeOpacity={0.7}>
+                  <X color={COLORS.textSecondary} size={14} />
+                </TouchableOpacity>
+              )}
+              {isSearching && (
+                <ActivityIndicator color={COLORS.primary} size="small" style={{ marginLeft: 4 }} />
+              )}
             </View>
+
+            {/* Selected product indicator */}
+            {selectedProduct && (
+              <View style={styles.selectedIndicator}>
+                <View style={styles.selectedDot} />
+                <Text style={styles.selectedText}>
+                  Linked to product: <Text style={styles.selectedName}>{selectedProduct.name}</Text>
+                </Text>
+              </View>
+            )}
+
+            {/* Search Dropdown */}
+            {showDropdown && fProduct && (
+              <View style={styles.dropdownContainer}>
+                {allProducts.length > 0 ? (
+                  <>
+                    <View style={styles.dropdownHeader}>
+                      <Text style={styles.dropdownHeaderText}>
+                        {totalResults} product{totalResults !== 1 ? 's' : ''} found
+                      </Text>
+                    </View>
+                    <FlatList
+                      data={allProducts}
+                      keyExtractor={(item) => item._id}
+                      renderItem={renderProductItem}
+                      style={styles.dropdownList}
+                      nestedScrollEnabled
+                      keyboardShouldPersistTaps="handled"
+                      onEndReached={handleLoadMore}
+                      onEndReachedThreshold={0.3}
+                      ListFooterComponent={
+                        hasMore ? (
+                          <View style={styles.loadMoreContainer}>
+                            {isSearching ? (
+                              <ActivityIndicator color={COLORS.primary} size="small" />
+                            ) : (
+                              <TouchableOpacity onPress={handleLoadMore} activeOpacity={0.7}>
+                                <Text style={styles.loadMoreText}>Load more…</Text>
+                              </TouchableOpacity>
+                            )}
+                          </View>
+                        ) : null
+                      }
+                    />
+                  </>
+                ) : !isSearching ? (
+                  <View style={styles.noResultsContainer}>
+                    <Text style={styles.noResultsEmoji}>🔍</Text>
+                    <Text style={styles.noResultsText}>No products found</Text>
+                  </View>
+                ) : null}
+
+                {/* Use custom name option */}
+                <TouchableOpacity
+                  style={styles.useCustomBtn}
+                  onPress={handleUseCustomName}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.useCustomText}>
+                    Use "<Text style={styles.useCustomName}>{productName}</Text>" as custom name
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
 
           {/* Grid: Price & Qty */}
@@ -207,12 +460,12 @@ export default function AddExpenseScreen({ onBack, onDone }: AddExpenseScreenPro
 
           {/* Submit */}
           <TouchableOpacity
-            style={styles.primaryButton}
+            style={[styles.primaryButton, (!isFormValid || loading || isCreating) && styles.primaryButtonDisabled]}
             onPress={handleSubmit}
-            disabled={loading || !productName.trim() || !price || !quantity}
+            disabled={loading || isCreating || !isFormValid}
             activeOpacity={0.8}
           >
-            {loading ? (
+            {(loading || isCreating) ? (
               <ActivityIndicator color={COLORS.textOnPrimary} size="small" />
             ) : (
               <Text style={styles.primaryButtonText}>Save Expense</Text>
@@ -310,6 +563,7 @@ const styles = StyleSheet.create({
   fieldBox: {
     marginBottom: 16,
     width: '100%',
+    zIndex: 1,
   },
   fieldLabel: {
     fontSize: 13,
@@ -346,6 +600,162 @@ const styles = StyleSheet.create({
     fontSize: 15,
     paddingVertical: 0,
     fontFamily: 'sans-serif',
+  },
+  clearBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(232, 160, 32, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 4,
+  },
+  // Selected product indicator
+  selectedIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 6,
+    paddingHorizontal: 4,
+  },
+  selectedDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: COLORS.success,
+    marginRight: 6,
+  },
+  selectedText: {
+    fontSize: 11,
+    color: COLORS.textSecondary,
+    fontFamily: 'sans-serif',
+  },
+  selectedName: {
+    color: COLORS.success,
+    fontWeight: '600',
+  },
+  selectedProductThumb: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    marginRight: 10,
+  },
+  // Dropdown styles
+  dropdownContainer: {
+    backgroundColor: COLORS.surface,
+    borderWidth: 1.5,
+    borderColor: COLORS.border,
+    borderRadius: 12,
+    marginTop: 4,
+    overflow: 'hidden',
+    maxHeight: 280,
+    ...SHADOWS.md,
+  },
+  dropdownHeader: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  dropdownHeaderText: {
+    fontSize: 11,
+    color: COLORS.textSecondary,
+    fontFamily: 'sans-serif',
+  },
+  dropdownList: {
+    maxHeight: 180,
+  },
+  dropdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderBottomWidth: 0.5,
+    borderBottomColor: 'rgba(232, 160, 32, 0.08)',
+  },
+  productPhoto: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    marginRight: 10,
+    backgroundColor: COLORS.surfaceElevated,
+  },
+  productPhotoPlaceholder: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    marginRight: 10,
+    backgroundColor: COLORS.surfaceElevated,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  productInfo: {
+    flex: 1,
+  },
+  productItemName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.text,
+    fontFamily: 'sans-serif',
+  },
+  productItemDesc: {
+    fontSize: 11,
+    color: COLORS.textSecondary,
+    fontFamily: 'sans-serif',
+    marginTop: 2,
+  },
+  adultBadge: {
+    backgroundColor: COLORS.errorLight,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginLeft: 6,
+  },
+  adultBadgeText: {
+    fontSize: 9,
+    fontWeight: 'bold',
+    color: COLORS.error,
+    fontFamily: 'monospace',
+  },
+  loadMoreContainer: {
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  loadMoreText: {
+    fontSize: 12,
+    color: COLORS.primary,
+    fontWeight: '600',
+    fontFamily: 'sans-serif',
+  },
+  noResultsContainer: {
+    paddingVertical: 16,
+    alignItems: 'center',
+  },
+  noResultsEmoji: {
+    fontSize: 24,
+    marginBottom: 4,
+  },
+  noResultsText: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    fontFamily: 'sans-serif',
+  },
+  useCustomBtn: {
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    backgroundColor: 'rgba(232, 160, 32, 0.06)',
+  },
+  useCustomText: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    fontFamily: 'sans-serif',
+  },
+  useCustomName: {
+    color: COLORS.primary,
+    fontWeight: 'bold',
   },
   gridRow: {
     flexDirection: 'row',
@@ -397,6 +807,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 12,
     ...SHADOWS.md,
+  },
+  primaryButtonDisabled: {
+    opacity: 0.5,
   },
   primaryButtonText: {
     color: COLORS.textOnPrimary,
