@@ -125,6 +125,21 @@ export const bazarEntryApi = baseApi.injectEndpoints({
       }),
       providesTags: (result, error, id) => [{ type: 'BazarEntry', id }],
     }),
+    updateBazarEntry: builder.mutation<BazarEntryResponse, { id: string; body: Partial<CreateBazarEntryPayload> }>({
+      query: ({ id, body }) => ({
+        url: `bazar-entries/${id}`,
+        method: 'PATCH',
+        body,
+      }),
+      invalidatesTags: ['BazarEntry'],
+    }),
+    deleteBazarEntry: builder.mutation<BazarEntryResponse, string>({
+      query: (id) => ({
+        url: `bazar-entries/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['BazarEntry'],
+    }),
   }),
 });
 
@@ -133,5 +148,7 @@ export const {
   useGetBazarEntriesQuery,
   useGetBazarEntryStatsQuery,
   useGetBazarEntryByIdQuery,
+  useUpdateBazarEntryMutation,
+  useDeleteBazarEntryMutation,
 } = bazarEntryApi;
 

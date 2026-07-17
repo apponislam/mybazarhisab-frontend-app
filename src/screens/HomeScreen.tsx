@@ -14,8 +14,13 @@ import { COLORS, SPACING, SIZES, SHADOWS } from '../constants/theme';
 
 // Redux & API
 import { useAppSelector, useAppDispatch } from '../redux/hooks';
-import { hasGroup as selectHasGroup } from '../redux/features/auth/authSlice';
+import { hasGroup as selectHasGroup, currentUser } from '../redux/features/auth/authSlice';
 import { useLazyCheckGroupQuery, useGetMyGroupQuery } from '../redux/features/group/groupApi';
+import {
+  useGetBazarEntriesQuery,
+  useUpdateBazarEntryMutation,
+  useDeleteBazarEntryMutation,
+} from '../redux/features/bazarEntry/bazarEntryApi';
 
 // Custom icons & components
 import { BookOpen, ShoppingBag, Calendar, User, Plus } from '../components/CustomIcon';
@@ -38,6 +43,60 @@ import ChangePasswordScreen from './ChangePasswordScreen';
 import GroupDetailsScreen from './GroupDetailsScreen';
 
 const { width } = Dimensions.get('window');
+
+function getEmojiForProduct(name: string): string {
+  const n = name.toLowerCase();
+  if (n.includes('onion') || n.includes('pyaj')) return '🧅';
+  if (n.includes('potato') || n.includes('alu')) return '🥔';
+  if (n.includes('tomato')) return '🍅';
+  if (n.includes('fish') || n.includes('mach')) return '🐟';
+  if (n.includes('meat') || n.includes('beef') || n.includes('chicken') || n.includes('murgi')) return '🍗';
+  if (n.includes('egg') || n.includes('dim')) return '🥚';
+  if (n.includes('oil') || n.includes('tel')) return '🫙';
+  if (n.includes('garlic') || n.includes('rosun')) return '🧄';
+  if (n.includes('dal') || n.includes('lentil')) return '🫘';
+  if (n.includes('rice') || n.includes('chal')) return '🌾';
+  return '🛒';
+}
+
+function formatDateDisplay(dateStr: string): string {
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  const today = new Date();
+  const isToday =
+    d.getFullYear() === today.getFullYear() &&
+    d.getMonth() === today.getMonth() &&
+    d.getDate() === today.getDate();
+
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const dayStr = `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+
+  return isToday ? `Today, ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : dayStr;
+}
+
+function mapApiToMockEntry(item: any): MockBazarEntry {
+  const productName = item.product?.name || item.name || 'Unknown Item';
+  return {
+    id: item._id,
+    product: {
+      id: item.product?._id || 'p_' + item._id,
+      name: productName,
+      emoji: getEmojiForProduct(productName),
+    },
+    price: item.price,
+    quantity: item.quantity,
+    unit: item.unit,
+    date: formatDateDisplay(item.date),
+    notes: item.notes || undefined,
+    user: {
+      id: item.user?._id || 'u_unknown',
+      name: item.user?.name || 'Unknown User',
+      email: item.user?.email || '',
+      phone: item.user?.phone || '',
+      profileImage: item.user?.profileImage,
+    },
+  };
+}
 
 // ─── Initial Mock Data ────────────────────────────────────────────────────────
 const MOCK_USERS: MockUser[] = [
@@ -106,12 +165,15 @@ export default function HomeScreen() {
   const [showAddPicker, setShowAddPicker] = useState(false);
 
   // Lists state
-  const [entries, setEntries] = useState<MockBazarEntry[]>(INITIAL_ENTRIES);
+  const [entries, setEntries] = useState<MockBazarEntry[]>([]);
   const [bills, setBills] = useState<MockBill[]>(INITIAL_BILLS);
 
   // Selected Detail states
   const [selectedEntry, setSelectedEntry] = useState<MockBazarEntry | null>(null);
   const [selectedBill, setSelectedBill] = useState<MockBill | null>(null);
+
+  const loggedInUser = useAppSelector(currentUser);
+  const myUserId = loggedInUser?._id || 'u1';
 
   // Helper calculation update to pass updated totals into Group stats dynamically
   const calculateStats = (groupName: string): GroupStats => {
@@ -119,9 +181,9 @@ export default function HomeScreen() {
     const totalBill = bills.reduce((s, b) => s + b.amount, 0);
     
     // My Bazar entries
-    const myEntries = entries.filter((e) => e.user.id === 'u1');
+    const myEntries = entries.filter((e) => e.user.id === myUserId);
     const myBazarExpense = myEntries.reduce((s, e) => s + e.price * e.quantity, 0);
-    const myBillExpense = bills.filter((b) => b.user.id === 'u1').reduce((s, b) => s + b.amount, 0);
+    const myBillExpense = bills.filter((b) => b.user.id === myUserId).reduce((s, b) => s + b.amount, 0);
 
     return {
       groupName,
@@ -150,6 +212,20 @@ export default function HomeScreen() {
     skip: !userHasGroup,
   });
 
+  // RTK Query API Hooks
+  const { data: bazarData } = useGetBazarEntriesQuery(undefined, {
+    skip: !userHasGroup,
+  });
+  const [updateBazarEntry] = useUpdateBazarEntryMutation();
+  const [deleteBazarEntry] = useDeleteBazarEntryMutation();
+
+  // Sync bazar entries from database
+  useEffect(() => {
+    if (bazarData?.data) {
+      setEntries(bazarData.data.map(mapApiToMockEntry));
+    }
+  }, [bazarData]);
+
   useEffect(() => {
     if (userHasGroup === null) {
       triggerCheckGroup();
@@ -162,7 +238,7 @@ export default function HomeScreen() {
     } else if (userHasGroup === false) {
       setGroupStats(null);
     }
-  }, [userHasGroup, myGroupData]);
+  }, [userHasGroup, myGroupData, entries]);
 
   // If loading or checking membership
   if (userHasGroup === null || isChecking || (userHasGroup === true && isFetchingGroup && !groupStats)) {
@@ -191,10 +267,14 @@ export default function HomeScreen() {
           setSubScreen(null);
         }}
         onEdit={() => setSubScreen('expense-edit')}
-        onDelete={() => {
-          setEntries((es) => es.filter((e) => e.id !== selectedEntry.id));
-          setSelectedEntry(null);
-          setSubScreen(null);
+        onDelete={async () => {
+          try {
+            await deleteBazarEntry(selectedEntry.id).unwrap();
+            setSelectedEntry(null);
+            setSubScreen(null);
+          } catch (err) {
+            // Silently handle error
+          }
         }}
       />
     );
@@ -205,10 +285,22 @@ export default function HomeScreen() {
       <ExpenseEditScreen
         entry={selectedEntry}
         onBack={() => setSubScreen('expense-detail')}
-        onSave={(updated) => {
-          setEntries((es) => es.map((e) => (e.id === updated.id ? updated : e)));
-          setSelectedEntry(updated);
-          setSubScreen('expense-detail');
+        onSave={async (updated) => {
+          try {
+            await updateBazarEntry({
+              id: updated.id,
+              body: {
+                price: updated.price,
+                quantity: updated.quantity,
+                unit: updated.unit,
+                notes: updated.notes,
+              },
+            }).unwrap();
+            setSelectedEntry(updated);
+            setSubScreen('expense-detail');
+          } catch (err) {
+            // Silently handle error
+          }
         }}
       />
     );
