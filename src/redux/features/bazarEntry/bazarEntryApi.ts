@@ -10,6 +10,82 @@ export interface CreateBazarEntryPayload {
   date: string;
 }
 
+export interface BazarEntryItem {
+  _id: string;
+  product?: {
+    _id: string;
+    name: string;
+    photo?: string;
+    is18Plus?: boolean;
+    description?: string;
+  };
+  name?: string;
+  price: number;
+  quantity: number;
+  unit: 'KG' | 'PIECE' | 'GM';
+  date: string;
+  notes?: string;
+  user: {
+    _id: string;
+    name: string;
+    email: string;
+    phone?: string;
+    profileImage?: string;
+  };
+  group?: {
+    _id: string;
+    name: string;
+    creator: string;
+  };
+  isDeleted: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BazarEntriesQueryParams {
+  filter?: string;
+  startDate?: string;
+  endDate?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface BazarEntriesResponse {
+  success: boolean;
+  message: string;
+  meta: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    totalCost: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+  data: BazarEntryItem[];
+}
+
+export interface BazarEntryStatsQueryParams {
+  filter?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
+export interface BazarEntryStatsResponse {
+  success: boolean;
+  message: string;
+  data: {
+    totalEntries: number;
+    totalAmount: number;
+  };
+}
+
+export interface SingleBazarEntryResponse {
+  success: boolean;
+  message: string;
+  data: BazarEntryItem;
+}
+
 interface BazarEntryResponse {
   success: boolean;
   message: string;
@@ -26,9 +102,36 @@ export const bazarEntryApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['BazarEntry'],
     }),
+    getBazarEntries: builder.query<BazarEntriesResponse, BazarEntriesQueryParams | void>({
+      query: (params) => ({
+        url: 'bazar-entries',
+        method: 'GET',
+        params: params || undefined,
+      }),
+      providesTags: ['BazarEntry'],
+    }),
+    getBazarEntryStats: builder.query<BazarEntryStatsResponse, BazarEntryStatsQueryParams | void>({
+      query: (params) => ({
+        url: 'bazar-entries/stats',
+        method: 'GET',
+        params: params || undefined,
+      }),
+      providesTags: ['BazarEntry'],
+    }),
+    getBazarEntryById: builder.query<SingleBazarEntryResponse, string>({
+      query: (id) => ({
+        url: `bazar-entries/${id}`,
+        method: 'GET',
+      }),
+      providesTags: (result, error, id) => [{ type: 'BazarEntry', id }],
+    }),
   }),
 });
 
 export const {
   useCreateBazarEntryMutation,
+  useGetBazarEntriesQuery,
+  useGetBazarEntryStatsQuery,
+  useGetBazarEntryByIdQuery,
 } = bazarEntryApi;
+
