@@ -250,24 +250,39 @@ export default function HomeScreen() {
 
   useEffect(() => {
     const handleBackPress = () => {
-      if (subScreen === null) {
-        return false;
-      }
-      if (subScreen === 'expense-edit') {
-        setSubScreen('expense-detail');
+      // 1. If add picker popup is visible, close it
+      if (showAddPicker) {
+        setShowAddPicker(false);
         return true;
       }
-      if (subScreen === 'bill-edit') {
-        setSubScreen('bill-detail');
+
+      // 2. If sub screen is active, go back/dismiss
+      if (subScreen !== null) {
+        if (subScreen === 'expense-edit') {
+          setSubScreen('expense-detail');
+          return true;
+        }
+        if (subScreen === 'bill-edit') {
+          setSubScreen('bill-detail');
+          return true;
+        }
+        setSubScreen(null);
         return true;
       }
-      setSubScreen(null);
-      return true;
+
+      // 3. If on any tab other than Home, navigate to Home tab
+      if (tab !== 'home') {
+        setTab('home');
+        return true;
+      }
+
+      // 4. Otherwise exit the app
+      return false;
     };
 
     const subscription = BackHandler.addEventListener('hardwareBackPress', handleBackPress);
     return () => subscription.remove();
-  }, [subScreen]);
+  }, [subScreen, showAddPicker, tab]);
 
   // If loading or checking membership
   if (userHasGroup === null || isChecking || (userHasGroup === true && isFetchingGroup && !groupStats)) {
