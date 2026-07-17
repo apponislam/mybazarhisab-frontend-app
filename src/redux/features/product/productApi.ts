@@ -25,7 +25,7 @@ interface ProductSearchResponse {
 }
 
 interface ProductSearchParams {
-  searchTerm: string;
+  searchTerm?: string;
   page?: number;
   limit?: number;
 }
@@ -33,11 +33,17 @@ interface ProductSearchParams {
 export const productApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     searchProducts: builder.query<ProductSearchResponse, ProductSearchParams>({
-      query: ({ searchTerm, page = 1, limit = 10 }) => ({
-        url: `products`,
-        method: 'GET',
-        params: { searchTerm, page, limit },
-      }),
+      query: ({ searchTerm, page = 1, limit = 10 }) => {
+        const params: Record<string, any> = { page, limit };
+        if (searchTerm) {
+          params.searchTerm = searchTerm;
+        }
+        return {
+          url: `products`,
+          method: 'GET',
+          params,
+        };
+      },
       providesTags: ['Product'],
     }),
   }),
