@@ -6,9 +6,11 @@ import {
   FlatList,
   TouchableOpacity,
   Image,
+  ActivityIndicator,
 } from 'react-native';
 import { COLORS, SPACING, SIZES, SHADOWS } from '../constants/theme';
 import { ChevronRight } from '../components/CustomIcon';
+import { useGetBazarEntriesQuery } from '../redux/features/bazarEntry/bazarEntryApi';
 
 export type BazarUnit = 'KG' | 'PIECE' | 'GM';
 
@@ -130,6 +132,60 @@ export function FilterTabs({ active, onChange }: FilterTabsProps) {
   );
 }
 
+function getEmojiForProduct(name: string): string {
+  const n = name.toLowerCase();
+  if (n.includes('onion') || n.includes('pyaj')) return '🧅';
+  if (n.includes('potato') || n.includes('alu')) return '🥔';
+  if (n.includes('tomato')) return '🍅';
+  if (n.includes('fish') || n.includes('mach')) return '🐟';
+  if (n.includes('meat') || n.includes('beef') || n.includes('chicken') || n.includes('murgi')) return '🍗';
+  if (n.includes('egg') || n.includes('dim')) return '🥚';
+  if (n.includes('oil') || n.includes('tel')) return '🫙';
+  if (n.includes('garlic') || n.includes('rosun')) return '🧄';
+  if (n.includes('dal') || n.includes('lentil')) return '🫘';
+  if (n.includes('rice') || n.includes('chal')) return '🌾';
+  return '🛒';
+}
+
+function formatDateDisplay(dateStr: string): string {
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  const today = new Date();
+  const isToday =
+    d.getFullYear() === today.getFullYear() &&
+    d.getMonth() === today.getMonth() &&
+    d.getDate() === today.getDate();
+
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const dayStr = `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+
+  return isToday ? `Today, ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : dayStr;
+}
+
+function mapApiToMockEntry(item: any): MockBazarEntry {
+  const productName = item.product?.name || item.name || 'Unknown Item';
+  return {
+    id: item._id,
+    product: {
+      id: item.product?._id || 'p_' + item._id,
+      name: productName,
+      emoji: getEmojiForProduct(productName),
+    },
+    price: item.price,
+    quantity: item.quantity,
+    unit: item.unit,
+    date: formatDateDisplay(item.date),
+    notes: item.notes || undefined,
+    user: {
+      id: item.user?._id || 'u_unknown',
+      name: item.user?.name || 'Unknown User',
+      email: item.user?.email || '',
+      phone: item.user?.phone || '',
+      profileImage: item.user?.profileImage,
+    },
+  };
+}
+
 // ExpenseRow Component
 interface ExpenseRowProps {
   entry: MockBazarEntry;
@@ -160,7 +216,7 @@ export function ExpenseRow({ entry, onClick }: ExpenseRowProps) {
           {entry.quantity} {entry.unit} · {entry.date}
         </Text>
       </View>
-
+ 
       <View style={styles.rightInfo}>
         <Text style={styles.totalAmount}>{fmtFull(total)}</Text>
         <Text style={styles.unitPriceText}>৳{entry.price}/{entry.unit}</Text>
@@ -175,15 +231,30 @@ interface ExpensesTabProps {
   onDetail: (e: MockBazarEntry) => void;
 }
 
-export default function ExpensesTab({ entries, onDetail }: ExpensesTabProps) {
+export default function ExpensesTab({ entries: propEntries, onDetail }: ExpensesTabProps) {
   const [filter, setFilter] = useState<'month' | 'all'>('month');
 
-  // For visual demo, we can mock that items with "Today", "Yesterday", or "July 12" belong to "This Month"
-  const filtered = filter === 'month' 
-    ? entries.filter(e => e.date.toLowerCase().includes('today') || e.date.toLowerCase().includes('yesterday') || e.date.toLowerCase().includes('12') || e.date.toLowerCase().includes('10'))
-    : entries;
+  // Fetch real bazar entries from database
+  const { data: bazarEntriesData, isLoading, isFetching, refetch } = useGetBazarEntriesQuery(
+    filter === 'month' ? undefined : { filter: 'ALL' }
+  );
 
-  const total = filtered.reduce((s, e) => s + e.price * e.quantity, 0);
+  const bazarList = bazarEntriesData?.data
+    ? bazarEntriesData.data.map(mapApiToMockEntry)
+    : [];
+
+  const total = bazarList.reduce((s, e) => s + e.price * e.quantity, 0);
+
+  const now = new Date();
+  const currentMonthName = now.toLocaleString('en-US', { month: 'long' });
+
+  if (isLoading) {
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -193,8 +264,8 @@ export default function ExpensesTab({ entries, onDetail }: ExpensesTabProps) {
           Bazar <Text style={{ color: COLORS.primary }}>Expenses</Text>
         </Text>
         <Text style={styles.headerSubtitle}>
-          {filtered.length} entries · <Text style={{ color: COLORS.primary, fontWeight: 'bold', fontFamily: 'monospace' }}>{fmtFull(total)}</Text>
-          {filter === 'month' && <Text style={{ color: COLORS.textSecondary }}> in July</Text>}
+          {bazarList.length} entries · <Text style={{ color: COLORS.primary, fontWeight: 'bold', fontFamily: 'monospace' }}>{fmtFull(total)}</Text>
+          {filter === 'month' && <Text style={{ color: COLORS.textSecondary }}> in {currentMonthName}</Text>}
         </Text>
       </View>
 
@@ -203,16 +274,20 @@ export default function ExpensesTab({ entries, onDetail }: ExpensesTabProps) {
 
       {/* List */}
       <FlatList
-        data={filtered}
+        data={bazarList}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <ExpenseRow entry={item} onClick={() => onDetail(item)} />
         )}
         contentContainerStyle={styles.listContent}
+        refreshing={isFetching}
+        onRefresh={refetch}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyEmoji}>🛒</Text>
-            <Text style={styles.emptyText}>No expenses this month</Text>
+            <Text style={styles.emptyText}>
+              {filter === 'month' ? `No expenses logged in ${currentMonthName}` : 'No expenses logged yet'}
+            </Text>
           </View>
         }
         showsVerticalScrollIndicator={false}
@@ -352,5 +427,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.textSecondary,
     fontFamily: 'sans-serif',
+  },
+  loaderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: COLORS.background,
   },
 });

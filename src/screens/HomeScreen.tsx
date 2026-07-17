@@ -18,9 +18,11 @@ import { hasGroup as selectHasGroup, currentUser } from '../redux/features/auth/
 import { useLazyCheckGroupQuery, useGetMyGroupQuery } from '../redux/features/group/groupApi';
 import {
   useGetBazarEntriesQuery,
+  useGetBazarEntryStatsQuery,
   useUpdateBazarEntryMutation,
   useDeleteBazarEntryMutation,
 } from '../redux/features/bazarEntry/bazarEntryApi';
+import { useGetUserDashboardStatsQuery } from '../redux/features/dashboard/dashboardApi';
 // Custom icons & components
 import { BookOpen, ShoppingBag, Calendar, User, Plus } from '../components/CustomIcon';
 import AddPicker from '../components/AddPicker';
@@ -176,7 +178,7 @@ export default function HomeScreen() {
 
   // Helper calculation update to pass updated totals into Group stats dynamically
   const calculateStats = (groupName: string): GroupStats => {
-    const totalBazar = entries.reduce((s, e) => s + e.price * e.quantity, 0);
+    const totalBazar = statsData?.data?.totalAmount ?? entries.reduce((s, e) => s + e.price * e.quantity, 0);
     const totalBill = bills.reduce((s, b) => s + b.amount, 0);
     
     // My Bazar entries
@@ -187,9 +189,9 @@ export default function HomeScreen() {
     return {
       groupName,
       totalMembers: 4,
-      totalGroupBazarEntries: entries.length,
-      totalMyBazarEntries: myEntries.length,
-      totalProductsCreatedByMe: 8,
+      totalGroupBazarAndBills: (statsData?.data?.totalEntries ?? entries.length) + bills.length,
+      totalMyBazarAndBills: myEntries.length + bills.filter((b) => b.user.id === myUserId).length,
+      totalNewProductsCreatedByMe: 8,
       thisMonthBazarExpense: totalBazar,
       prevMonthBazarExpense: 10950,
       thisYearBazarExpense: totalBazar + 85000,
@@ -215,6 +217,12 @@ export default function HomeScreen() {
   const { data: bazarData } = useGetBazarEntriesQuery(undefined, {
     skip: !userHasGroup,
   });
+  const { data: statsData } = useGetBazarEntryStatsQuery(undefined, {
+    skip: !userHasGroup,
+  });
+  const { data: dashboardData } = useGetUserDashboardStatsQuery(undefined, {
+    skip: !userHasGroup,
+  });
   const [updateBazarEntry] = useUpdateBazarEntryMutation();
   const [deleteBazarEntry] = useDeleteBazarEntryMutation();
 
@@ -233,11 +241,11 @@ export default function HomeScreen() {
 
   useEffect(() => {
     if (userHasGroup === true && myGroupData?.data) {
-      setGroupStats(calculateStats(myGroupData.data.name));
+      setGroupStats(dashboardData?.data || calculateStats(myGroupData.data.name));
     } else if (userHasGroup === false) {
       setGroupStats(null);
     }
-  }, [userHasGroup, myGroupData, entries]);
+  }, [userHasGroup, myGroupData, entries, statsData, dashboardData]);
 
   // If loading or checking membership
   if (userHasGroup === null || isChecking || (userHasGroup === true && isFetchingGroup && !groupStats)) {
@@ -254,7 +262,7 @@ export default function HomeScreen() {
   }
 
   // Get active stats object dynamically calculated
-  const activeStats = calculateStats(groupStats.groupName);
+  const activeStats = dashboardData?.data || calculateStats(groupStats.groupName);
 
   // Render Gate 2: Detail or Edit screens
   if (subScreen === 'expense-detail' && selectedEntry) {

@@ -135,15 +135,15 @@ export default function HomeTab({ stats }: HomeTabProps) {
       <View style={styles.gridRow}>
         <View style={styles.flexHalf}>
           <CountCard
-            label="Group Entries"
-            value={stats.totalGroupBazarEntries}
+            label="Group Bazar & Bills"
+            value={stats.totalGroupBazarAndBills}
             icon={<ShoppingBag color={COLORS.primary} size={18} />}
           />
         </View>
         <View style={styles.flexHalf}>
           <CountCard
-            label="My Entries"
-            value={stats.totalMyBazarEntries}
+            label="My Bazar & Bills"
+            value={stats.totalMyBazarAndBills}
             icon={<BookOpen color={COLORS.primary} size={18} />}
           />
         </View>
@@ -151,7 +151,7 @@ export default function HomeTab({ stats }: HomeTabProps) {
       <View style={{ marginTop: 2 }}>
         <CountCard
           label="Products Created by Me"
-          value={stats.totalProductsCreatedByMe}
+          value={stats.totalNewProductsCreatedByMe}
           icon={<Package color={COLORS.primary} size={18} />}
         />
       </View>

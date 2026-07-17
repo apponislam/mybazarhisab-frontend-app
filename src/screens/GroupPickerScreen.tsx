@@ -22,9 +22,9 @@ import Toast from '../components/Toast';
 export interface GroupStats {
   groupName: string;
   totalMembers: number;
-  totalGroupBazarEntries: number;
-  totalMyBazarEntries: number;
-  totalProductsCreatedByMe: number;
+  totalGroupBazarAndBills: number;
+  totalMyBazarAndBills: number;
+  totalNewProductsCreatedByMe: number;
   thisMonthBazarExpense: number;
   prevMonthBazarExpense: number;
   thisYearBazarExpense: number;
@@ -43,9 +43,9 @@ function makeMockStats(groupName: string): GroupStats {
   return {
     groupName,
     totalMembers: 8,
-    totalGroupBazarEntries: 134,
-    totalMyBazarEntries: 47,
-    totalProductsCreatedByMe: 23,
+    totalGroupBazarAndBills: 134,
+    totalMyBazarAndBills: 47,
+    totalNewProductsCreatedByMe: 23,
     thisMonthBazarExpense: 12840,
     prevMonthBazarExpense: 10950,
     thisYearBazarExpense: 98400,
