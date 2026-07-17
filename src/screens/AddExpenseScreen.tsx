@@ -13,7 +13,7 @@ import {
   Keyboard,
 } from 'react-native';
 import { COLORS, SPACING, SIZES, SHADOWS } from '../constants/theme';
-import { ArrowLeft, Package, X, ChevronDown } from '../components/CustomIcon';
+import { ArrowLeft, Package, X, Calendar } from '../components/CustomIcon';
 import { MockBazarEntry, BazarUnit } from './ExpensesTab';
 import { useLazySearchProductsQuery, ProductItem } from '../redux/features/product/productApi';
 import { useCreateBazarEntryMutation } from '../redux/features/bazarEntry/bazarEntryApi';
@@ -39,13 +39,26 @@ function getEmojiForProduct(name: string): string {
   return '🛒'; // default
 }
 
-// Format today's date as YYYY-MM-DD
-function getTodayDate(): string {
-  const d = new Date();
+// Format a Date to YYYY-MM-DD
+function formatDateYMD(d: Date): string {
   const yyyy = d.getFullYear();
   const mm = String(d.getMonth() + 1).padStart(2, '0');
   const dd = String(d.getDate()).padStart(2, '0');
   return `${yyyy}-${mm}-${dd}`;
+}
+
+// Format a Date to human-readable display
+function formatDateDisplay(d: Date): string {
+  const today = new Date();
+  const isToday =
+    d.getFullYear() === today.getFullYear() &&
+    d.getMonth() === today.getMonth() &&
+    d.getDate() === today.getDate();
+
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const dayStr = `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+
+  return isToday ? `Today — ${dayStr}` : dayStr;
 }
 
 export default function AddExpenseScreen({ onBack, onDone }: AddExpenseScreenProps) {
@@ -55,6 +68,8 @@ export default function AddExpenseScreen({ onBack, onDone }: AddExpenseScreenPro
   const [price, setPrice] = useState('');
   const [quantity, setQuantity] = useState('');
   const [unit, setUnit] = useState<BazarUnit>('KG');
+  const [date, setDate] = useState(new Date()); // defaults to today
+  const [dateText, setDateText] = useState(formatDateYMD(new Date()));
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -70,70 +85,70 @@ export default function AddExpenseScreen({ onBack, onDone }: AddExpenseScreenPro
   const [fPrice, setFPrice] = useState(false);
   const [fQty, setFQty] = useState(false);
   const [fNotes, setFNotes] = useState(false);
+  const [fDate, setFDate] = useState(false);
 
   // Debounce timer ref
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const initialLoadDone = useRef(false);
 
   // RTK Query hooks
   const [searchProducts, { isFetching: isSearching }] = useLazySearchProductsQuery();
   const [createBazarEntry, { isLoading: isCreating }] = useCreateBazarEntryMutation();
 
-  // Debounced search handler
+  // Fetch products (called on focus and on text change)
+  const fetchProducts = useCallback(async (searchTerm?: string, page: number = 1) => {
+    try {
+      const params: { searchTerm?: string; page: number; limit: number } = {
+        page,
+        limit: 10,
+      };
+      if (searchTerm && searchTerm.trim().length > 0) {
+        params.searchTerm = searchTerm.trim();
+      }
+
+      const result = await searchProducts(params).unwrap();
+      if (page === 1) {
+        setAllProducts(result.data || []);
+      } else {
+        setAllProducts((prev) => [...prev, ...(result.data || [])]);
+      }
+      setHasMore(result.meta?.hasNext || false);
+      setTotalResults(result.meta?.total || 0);
+      setSearchPage(page);
+      setShowDropdown(true);
+    } catch (err) {
+      if (page === 1) setAllProducts([]);
+      setShowDropdown(true);
+    }
+  }, [searchProducts]);
+
+  // On product input focus — auto-load products immediately
+  const handleProductFocus = useCallback(() => {
+    setFProduct(true);
+    if (!selectedProduct) {
+      fetchProducts(productName || undefined, 1);
+    }
+  }, [selectedProduct, productName, fetchProducts]);
+
+  // Debounced search when text changes
   const handleProductSearch = useCallback((text: string) => {
     setProductName(text);
-    setSelectedProduct(null); // Clear selected product when typing
+    setSelectedProduct(null);
 
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
     }
 
-    if (text.trim().length < 2) {
-      setShowDropdown(false);
-      setAllProducts([]);
-      setSearchPage(1);
-      return;
-    }
-
-    debounceRef.current = setTimeout(async () => {
-      try {
-        const result = await searchProducts({
-          searchTerm: text.trim(),
-          page: 1,
-          limit: 10,
-        }).unwrap();
-
-        setAllProducts(result.data || []);
-        setHasMore(result.meta?.hasNext || false);
-        setTotalResults(result.meta?.total || 0);
-        setSearchPage(1);
-        setShowDropdown(true);
-      } catch (err) {
-        // Search failed silently — user can still type custom name
-        setAllProducts([]);
-        setShowDropdown(true);
-      }
+    debounceRef.current = setTimeout(() => {
+      fetchProducts(text || undefined, 1);
     }, 400);
-  }, [searchProducts]);
+  }, [fetchProducts]);
 
   // Load more products (lazy loading / pagination)
   const handleLoadMore = useCallback(async () => {
     if (!hasMore || isSearching) return;
-
-    const nextPage = searchPage + 1;
-    try {
-      const result = await searchProducts({
-        searchTerm: productName.trim(),
-        page: nextPage,
-        limit: 10,
-      }).unwrap();
-
-      setAllProducts((prev) => [...prev, ...(result.data || [])]);
-      setHasMore(result.meta?.hasNext || false);
-      setSearchPage(nextPage);
-    } catch (err) {
-      // Silently fail
-    }
-  }, [hasMore, isSearching, searchPage, productName, searchProducts]);
+    fetchProducts(productName || undefined, searchPage + 1);
+  }, [hasMore, isSearching, searchPage, productName, fetchProducts]);
 
   // Select product from dropdown
   const handleSelectProduct = (product: ProductItem) => {
@@ -158,6 +173,21 @@ export default function AddExpenseScreen({ onBack, onDone }: AddExpenseScreenPro
     setAllProducts([]);
   };
 
+  // Close dropdown (tap outside)
+  const handleCloseDropdown = () => {
+    setShowDropdown(false);
+  };
+
+  // Handle date text change — validate and parse YYYY-MM-DD
+  const handleDateChange = (text: string) => {
+    setDateText(text);
+    // Try to parse the date
+    const parsed = new Date(text);
+    if (!isNaN(parsed.getTime()) && text.length === 10) {
+      setDate(parsed);
+    }
+  };
+
   // Submit handler — POST to API
   const handleSubmit = async () => {
     if (!productName.trim() || !price || !quantity) return;
@@ -169,7 +199,7 @@ export default function AddExpenseScreen({ onBack, onDone }: AddExpenseScreenPro
         price: Number(price),
         quantity: Number(quantity),
         unit,
-        date: getTodayDate(),
+        date: formatDateYMD(date),
       };
 
       // If a product was selected from search, include the productId
@@ -194,7 +224,7 @@ export default function AddExpenseScreen({ onBack, onDone }: AddExpenseScreenPro
         price: Number(price),
         quantity: Number(quantity),
         unit,
-        date: 'Today, ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        date: formatDateDisplay(date),
         notes: notes.trim() || undefined,
         user: {
           id: 'u1',
@@ -206,7 +236,6 @@ export default function AddExpenseScreen({ onBack, onDone }: AddExpenseScreenPro
 
       onDone(newEntry);
     } catch (err) {
-      // If API fails, still show as local entry for now
       setLoading(false);
     }
   };
@@ -274,8 +303,8 @@ export default function AddExpenseScreen({ onBack, onDone }: AddExpenseScreenPro
 
         {/* Form Fields */}
         <View style={styles.formContainer}>
-          {/* Product Name with Search Dropdown */}
-          <View style={styles.fieldBox}>
+          {/* Product Name with Search Dropdown — uses zIndex + absolute positioning */}
+          <View style={styles.productFieldWrapper}>
             <Text style={styles.fieldLabel}>Product Name</Text>
             <View style={[styles.inputWrapper, fProduct && styles.inputWrapperFocused]}>
               {selectedProduct?.photo ? (
@@ -289,13 +318,12 @@ export default function AddExpenseScreen({ onBack, onDone }: AddExpenseScreenPro
                 placeholderTextColor={COLORS.placeholder}
                 value={productName}
                 onChangeText={handleProductSearch}
-                onFocus={() => {
-                  setFProduct(true);
-                  if (productName.trim().length >= 2 && !selectedProduct) {
-                    setShowDropdown(true);
-                  }
+                onFocus={handleProductFocus}
+                onBlur={() => {
+                  setFProduct(false);
+                  // Delay closing dropdown so tap on items can register
+                  setTimeout(() => setShowDropdown(false), 200);
                 }}
-                onBlur={() => setFProduct(false)}
                 autoCorrect={false}
               />
               {productName.length > 0 && (
@@ -318,8 +346,8 @@ export default function AddExpenseScreen({ onBack, onDone }: AddExpenseScreenPro
               </View>
             )}
 
-            {/* Search Dropdown */}
-            {showDropdown && fProduct && (
+            {/* Search Dropdown — ABSOLUTE POSITIONED so it overlays other fields */}
+            {showDropdown && (
               <View style={styles.dropdownContainer}>
                 {allProducts.length > 0 ? (
                   <>
@@ -359,16 +387,18 @@ export default function AddExpenseScreen({ onBack, onDone }: AddExpenseScreenPro
                   </View>
                 ) : null}
 
-                {/* Use custom name option */}
-                <TouchableOpacity
-                  style={styles.useCustomBtn}
-                  onPress={handleUseCustomName}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.useCustomText}>
-                    Use "<Text style={styles.useCustomName}>{productName}</Text>" as custom name
-                  </Text>
-                </TouchableOpacity>
+                {/* Use custom name option — always shown when user typed something */}
+                {productName.trim().length > 0 && (
+                  <TouchableOpacity
+                    style={styles.useCustomBtn}
+                    onPress={handleUseCustomName}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.useCustomText}>
+                      Use "<Text style={styles.useCustomName}>{productName}</Text>" as custom name
+                    </Text>
+                  </TouchableOpacity>
+                )}
               </View>
             )}
           </View>
@@ -437,6 +467,24 @@ export default function AddExpenseScreen({ onBack, onDone }: AddExpenseScreenPro
                 </TouchableOpacity>
               ))}
             </View>
+          </View>
+
+          {/* Date Field */}
+          <View style={styles.fieldBox}>
+            <Text style={styles.fieldLabel}>Date</Text>
+            <View style={[styles.inputWrapper, fDate && styles.inputWrapperFocused]}>
+              <Calendar color={COLORS.textSecondary} size={18} style={styles.fieldIcon} />
+              <TextInput
+                style={styles.textInput}
+                placeholder="YYYY-MM-DD"
+                placeholderTextColor={COLORS.placeholder}
+                value={dateText}
+                onChangeText={handleDateChange}
+                onFocus={() => setFDate(true)}
+                onBlur={() => setFDate(false)}
+              />
+            </View>
+            <Text style={styles.dateHint}>{formatDateDisplay(date)}</Text>
           </View>
 
           {/* Notes (Optional) */}
@@ -560,10 +608,16 @@ const styles = StyleSheet.create({
   formContainer: {
     width: '100%',
   },
+  // Product field wrapper — high zIndex so dropdown overlays other fields
+  productFieldWrapper: {
+    marginBottom: 16,
+    width: '100%',
+    zIndex: 100,
+    elevation: 100,
+  },
   fieldBox: {
     marginBottom: 16,
     width: '100%',
-    zIndex: 1,
   },
   fieldLabel: {
     fontSize: 13,
@@ -639,16 +693,21 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     marginRight: 10,
   },
-  // Dropdown styles
+  // Dropdown styles — ABSOLUTE so it overlays below the input
   dropdownContainer: {
+    position: 'absolute',
+    top: 82, // label height (~21) + input height (52) + gap (8) + margin
+    left: 0,
+    right: 0,
     backgroundColor: COLORS.surface,
     borderWidth: 1.5,
     borderColor: COLORS.border,
     borderRadius: 12,
-    marginTop: 4,
     overflow: 'hidden',
     maxHeight: 280,
-    ...SHADOWS.md,
+    zIndex: 999,
+    ...SHADOWS.lg,
+    elevation: 999,
   },
   dropdownHeader: {
     paddingHorizontal: 14,
@@ -790,6 +849,14 @@ const styles = StyleSheet.create({
   },
   unitTabTextActive: {
     color: COLORS.primary,
+  },
+  // Date field
+  dateHint: {
+    fontSize: 11,
+    color: COLORS.textSecondary,
+    fontFamily: 'sans-serif',
+    marginTop: 4,
+    paddingHorizontal: 4,
   },
   textAreaWrapper: {
     height: 96,
