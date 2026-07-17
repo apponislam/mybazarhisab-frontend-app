@@ -9,6 +9,7 @@ import {
   Dimensions,
   Platform,
   ActivityIndicator,
+  BackHandler,
 } from 'react-native';
 import { COLORS, SPACING, SIZES, SHADOWS } from '../constants/theme';
 
@@ -246,6 +247,27 @@ export default function HomeScreen() {
       setGroupStats(null);
     }
   }, [userHasGroup, myGroupData, entries, statsData, dashboardData]);
+
+  useEffect(() => {
+    const handleBackPress = () => {
+      if (subScreen === null) {
+        return false;
+      }
+      if (subScreen === 'expense-edit') {
+        setSubScreen('expense-detail');
+        return true;
+      }
+      if (subScreen === 'bill-edit') {
+        setSubScreen('bill-detail');
+        return true;
+      }
+      setSubScreen(null);
+      return true;
+    };
+
+    const subscription = BackHandler.addEventListener('hardwareBackPress', handleBackPress);
+    return () => subscription.remove();
+  }, [subScreen]);
 
   // If loading or checking membership
   if (userHasGroup === null || isChecking || (userHasGroup === true && isFetchingGroup && !groupStats)) {
