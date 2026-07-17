@@ -200,52 +200,62 @@ export default function ProfileTab({
       {/* Notifications */}
       <View style={styles.settingsSection}>
         <Text style={styles.sectionHeader}>Notifications</Text>
-        <View style={styles.settingsListCard}>
-          <SettingsRow
-            icon={<Plus color={COLORS.primary} size={16} />}
-            label="Push Notifications"
-            sub={
-              pushNotif
-                ? 'Receive alerts for new entries'
-                : 'Notifications are off'
-            }
-            right={
-              <Switch
-                value={pushNotif}
-                onValueChange={setPushNotif}
-                trackColor={{
-                  false: 'rgba(232,160,32,0.2)',
-                  true: COLORS.primary,
-                }}
-                thumbColor={
-                  Platform.OS === 'ios' ? '#fff' : pushNotif ? '#fff' : '#aaa'
-                }
-              />
-            }
-          />
-          <View style={styles.listLineDivider} />
-          <SettingsRow
-            icon={<Mail color={COLORS.primary} size={16} />}
-            label="Email Notifications"
-            sub={
-              emailNotif
-                ? 'Get email summaries & alerts'
-                : 'Email notifications are off'
-            }
-            right={
-              <Switch
-                value={emailNotif}
-                onValueChange={setEmailNotif}
-                trackColor={{
-                  false: 'rgba(232,160,32,0.2)',
-                  true: COLORS.primary,
-                }}
-                thumbColor={
-                  Platform.OS === 'ios' ? '#fff' : emailNotif ? '#fff' : '#aaa'
-                }
-              />
-            }
-          />
+        <View style={styles.overlayContainer}>
+          <View style={styles.settingsListCard}>
+            <SettingsRow
+              icon={<Plus color={COLORS.primary} size={16} />}
+              label="Push Notifications"
+              sub={
+                pushNotif
+                  ? 'Receive alerts for new entries'
+                  : 'Notifications are off'
+              }
+              right={
+                <Switch
+                  value={pushNotif}
+                  onValueChange={setPushNotif}
+                  trackColor={{
+                    false: 'rgba(232,160,32,0.2)',
+                    true: COLORS.primary,
+                  }}
+                  thumbColor={
+                    Platform.OS === 'ios' ? '#fff' : pushNotif ? '#fff' : '#aaa'
+                  }
+                  disabled
+                />
+              }
+            />
+            <View style={styles.listLineDivider} />
+            <SettingsRow
+              icon={<Mail color={COLORS.primary} size={16} />}
+              label="Email Notifications"
+              sub={
+                emailNotif
+                  ? 'Get email summaries & alerts'
+                  : 'Email notifications are off'
+              }
+              right={
+                <Switch
+                  value={emailNotif}
+                  onValueChange={setEmailNotif}
+                  trackColor={{
+                    false: 'rgba(232,160,32,0.2)',
+                    true: COLORS.primary,
+                  }}
+                  thumbColor={
+                    Platform.OS === 'ios' ? '#fff' : emailNotif ? '#fff' : '#aaa'
+                  }
+                  disabled
+                />
+              }
+            />
+          </View>
+          {/* Translucent Watermark Overlay */}
+          <View style={styles.watermarkOverlay}>
+            <Text style={{ fontSize: 24, marginBottom: 6 }}>🚧</Text>
+            <Text style={styles.watermarkText}>Currently working on it</Text>
+            <Text style={styles.watermarkSubText}>Coming soon in next release</Text>
+          </View>
         </View>
       </View>
 
@@ -253,13 +263,6 @@ export default function ProfileTab({
       <View style={styles.settingsSection}>
         <Text style={styles.sectionHeader}>Preferences</Text>
         <View style={styles.settingsListCard}>
-          <SettingsRow
-            icon={<Plus color={COLORS.primary} size={16} />}
-            label="Language"
-            sub={loggedInUser?.language === 'bn' ? 'Bangla' : 'English'}
-            right={<Text style={styles.langCode}>{(loggedInUser?.language || 'EN').toUpperCase()}</Text>}
-          />
-          <View style={styles.listLineDivider} />
           <SettingsRow
             icon={<Plus color={COLORS.primary} size={16} />}
             label="Address"
@@ -568,5 +571,36 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff',
     fontFamily: 'sans-serif',
+  },
+  overlayContainer: {
+    position: 'relative',
+  },
+  watermarkOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(28, 17, 9, 0.88)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+    borderRadius: 16,
+    borderWidth: 1.2,
+    borderColor: 'rgba(232, 160, 32, 0.2)',
+  },
+  watermarkText: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: COLORS.primary,
+    fontFamily: 'monospace',
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+  },
+  watermarkSubText: {
+    fontSize: 10,
+    color: COLORS.textSecondary,
+    fontFamily: 'sans-serif',
+    marginTop: 4,
   },
 });
