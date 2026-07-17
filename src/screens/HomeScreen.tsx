@@ -21,7 +21,6 @@ import {
   useUpdateBazarEntryMutation,
   useDeleteBazarEntryMutation,
 } from '../redux/features/bazarEntry/bazarEntryApi';
-
 // Custom icons & components
 import { BookOpen, ShoppingBag, Calendar, User, Plus } from '../components/CustomIcon';
 import AddPicker from '../components/AddPicker';

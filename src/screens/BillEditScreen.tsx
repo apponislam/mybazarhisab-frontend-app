@@ -13,6 +13,7 @@ import {
 import { COLORS, SPACING, SIZES, SHADOWS } from '../constants/theme';
 import { ArrowLeft, X, Plus } from '../components/CustomIcon';
 import { MockBill, BillCategory, BILL_CATEGORIES, BILL_META } from './BillsTab';
+import { useUpdateBillMutation } from '../redux/features/bill/billApi';
 
 interface BillEditScreenProps {
   bill: MockBill;
@@ -41,11 +42,24 @@ export default function BillEditScreen({
 
   const activeMeta = BILL_META[category];
 
-  const handleSubmit = () => {
+  // RTK Query update mutation
+  const [updateBill, { isLoading: isUpdating }] = useUpdateBillMutation();
+
+  const handleSubmit = async () => {
     if (!title.trim() || !amount) return;
 
     setLoading(true);
-    setTimeout(() => {
+    try {
+      await updateBill({
+        id: bill.id,
+        body: {
+          category,
+          title: title.trim(),
+          amount: Number(amount),
+          notes: notes.trim() || undefined,
+        },
+      }).unwrap();
+
       setLoading(false);
       onSave({
         ...bill,
@@ -54,7 +68,9 @@ export default function BillEditScreen({
         amount: Number(amount),
         notes: notes.trim() || undefined,
       });
-    }, 1200);
+    } catch (err) {
+      setLoading(false);
+    }
   };
 
   return (
@@ -159,12 +175,12 @@ export default function BillEditScreen({
 
           {/* Submit */}
           <TouchableOpacity
-            style={[styles.primaryButton, { backgroundColor: activeMeta.color }]}
+            style={[styles.primaryButton, { backgroundColor: activeMeta.color }, (loading || isUpdating) && { opacity: 0.5 }]}
             onPress={handleSubmit}
-            disabled={loading || !title.trim() || !amount}
+            disabled={loading || isUpdating || !title.trim() || !amount}
             activeOpacity={0.8}
           >
-            {loading ? (
+            {(loading || isUpdating) ? (
               <ActivityIndicator color="#fff" size="small" />
             ) : (
               <Text style={styles.primaryButtonText}>Save Changes</Text>

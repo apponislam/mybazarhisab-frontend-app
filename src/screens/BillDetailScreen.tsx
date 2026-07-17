@@ -12,6 +12,7 @@ import { ArrowLeft } from '../components/CustomIcon';
 import { MockBill, BILL_META } from './BillsTab';
 import { Avatar, fmtFull } from './ExpensesTab';
 import { DeleteConfirm } from './ExpenseDetailScreen';
+import { useDeleteBillMutation } from '../redux/features/bill/billApi';
 
 interface BillDetailScreenProps {
   bill: MockBill;
@@ -28,6 +29,16 @@ export default function BillDetailScreen({
 }: BillDetailScreenProps) {
   const meta = BILL_META[bill.category];
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleteBill, { isLoading: isDeleting }] = useDeleteBillMutation();
+
+  const handleDelete = async () => {
+    try {
+      await deleteBill(bill.id).unwrap();
+      onDelete();
+    } catch (err) {
+      // Silently handle error
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -117,7 +128,7 @@ export default function BillDetailScreen({
           {confirmDelete && (
             <DeleteConfirm
               label="Bill"
-              onConfirm={onDelete}
+              onConfirm={handleDelete}
               onCancel={() => setConfirmDelete(false)}
             />
           )}

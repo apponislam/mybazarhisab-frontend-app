@@ -5,10 +5,12 @@ import {
   Text,
   FlatList,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
 import { COLORS, SPACING, SIZES, SHADOWS } from '../constants/theme';
 import { ChevronRight } from '../components/CustomIcon';
 import { MockUser, Avatar, FilterTabs, fmtFull } from './ExpensesTab';
+import { useGetBillsQuery } from '../redux/features/bill/billApi';
 
 export type BillCategory =
   | 'RENT' | 'TRAVEL' | 'WIFI' | 'ELECTRICITY' | 'GAS' | 'WATER'
@@ -53,6 +55,39 @@ export const BILL_CATEGORIES = Object.entries(BILL_META).map(([k, v]) => ({
   key: k as BillCategory,
   ...v,
 }));
+
+function formatDateDisplay(dateStr: string): string {
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  const today = new Date();
+  const isToday =
+    d.getFullYear() === today.getFullYear() &&
+    d.getMonth() === today.getMonth() &&
+    d.getDate() === today.getDate();
+
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const dayStr = `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+
+  return isToday ? `Today, ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : dayStr;
+}
+
+function mapApiToMockBill(item: any): MockBill {
+  return {
+    id: item._id,
+    category: item.category,
+    title: item.title,
+    amount: item.amount,
+    date: formatDateDisplay(item.date),
+    notes: item.notes || undefined,
+    user: {
+      id: item.user?._id || 'u_unknown',
+      name: item.user?.name || 'Unknown User',
+      email: item.user?.email || '',
+      phone: item.user?.phone || '',
+      profileImage: item.user?.profileImage,
+    },
+  };
+}
 
 // BillRow Component
 interface BillRowProps {
@@ -110,15 +145,30 @@ interface BillsTabProps {
   onDetail: (b: MockBill) => void;
 }
 
-export default function BillsTab({ bills, onDetail }: BillsTabProps) {
+export default function BillsTab({ bills: propBills, onDetail }: BillsTabProps) {
   const [filter, setFilter] = useState<'month' | 'all'>('month');
 
-  // For visual demo, filter to items within July (month)
-  const filtered = filter === 'month'
-    ? bills.filter(b => b.date.toLowerCase().includes('today') || b.date.toLowerCase().includes('yesterday') || b.date.toLowerCase().includes('july') || b.date.toLowerCase().includes('5') || b.date.toLowerCase().includes('8'))
-    : bills;
+  // Fetch real bills based on filter setting
+  const { data: billsData, isLoading, isFetching, refetch } = useGetBillsQuery(
+    filter === 'month' ? undefined : { filter: 'ALL' }
+  );
 
-  const total = filtered.reduce((s, b) => s + b.amount, 0);
+  const billsList = billsData?.data
+    ? billsData.data.map(mapApiToMockBill)
+    : [];
+
+  const total = billsList.reduce((s, b) => s + b.amount, 0);
+
+  const now = new Date();
+  const currentMonthName = now.toLocaleString('en-US', { month: 'long' });
+
+  if (isLoading) {
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator size="large" color={COLORS.accent} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -128,8 +178,8 @@ export default function BillsTab({ bills, onDetail }: BillsTabProps) {
           Group <Text style={{ color: COLORS.accent }}>Bills</Text>
         </Text>
         <Text style={styles.headerSubtitle}>
-          {filtered.length} bills · <Text style={{ color: COLORS.accent, fontWeight: 'bold', fontFamily: 'monospace' }}>{fmtFull(total)}</Text>
-          {filter === 'month' && <Text style={{ color: COLORS.textSecondary }}> in July</Text>}
+          {billsList.length} bills · <Text style={{ color: COLORS.accent, fontWeight: 'bold', fontFamily: 'monospace' }}>{fmtFull(total)}</Text>
+          {filter === 'month' && <Text style={{ color: COLORS.textSecondary }}> in {currentMonthName}</Text>}
         </Text>
       </View>
 
@@ -138,16 +188,20 @@ export default function BillsTab({ bills, onDetail }: BillsTabProps) {
 
       {/* List */}
       <FlatList
-        data={filtered}
+        data={billsList}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <BillRow bill={item} onClick={() => onDetail(item)} />
         )}
         contentContainerStyle={styles.listContent}
+        refreshing={isFetching}
+        onRefresh={refetch}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyEmoji}>📄</Text>
-            <Text style={styles.emptyText}>No bills logged this month</Text>
+            <Text style={styles.emptyText}>
+              {filter === 'month' ? `No bills logged in ${currentMonthName}` : 'No bills logged yet'}
+            </Text>
           </View>
         }
         showsVerticalScrollIndicator={false}
@@ -271,5 +325,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.textSecondary,
     fontFamily: 'sans-serif',
+  },
+  loaderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: COLORS.background,
   },
 });
