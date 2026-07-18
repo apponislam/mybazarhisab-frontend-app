@@ -320,7 +320,7 @@ export default function HomeScreen() {
   }, [navHistory, showAddPicker]);
 
   // If loading or checking membership
-  if (userHasGroup === null || isChecking || (userHasGroup === true && isFetchingGroup && !groupStats)) {
+  if (userHasGroup === null || isChecking) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={COLORS.primary} />
@@ -329,8 +329,18 @@ export default function HomeScreen() {
   }
 
   // Render Gate 1: Join/Create group selection
-  if (userHasGroup === false || !groupStats) {
+  // Only show GroupPickerScreen if user explicitly has no group
+  if (userHasGroup === false) {
     return <GroupPickerScreen onGroupReady={(s) => setGroupStats(s)} />;
+  }
+
+  // If user has a group but group statistics/details are still loading, show loading spinner
+  if (userHasGroup === true && !groupStats) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </View>
+    );
   }
 
   // Get active stats object dynamically calculated

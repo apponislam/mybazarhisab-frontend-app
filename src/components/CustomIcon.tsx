@@ -586,3 +586,29 @@ export function Home({ color = '#e8a020', size = 20, style }: IconProps) {
     </View>
   );
 }
+
+export function Receipt({ color = '#e8a020', size = 20, style }: IconProps) {
+  const w = size * 0.7;
+  const h = size * 0.8;
+  return (
+    <View style={[{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }, style]}>
+      {/* Paper container */}
+      <View style={{
+        width: w,
+        height: h,
+        borderWidth: 1.5,
+        borderColor: color,
+        borderRadius: 1.5,
+        padding: 3,
+        justifyContent: 'space-around',
+        alignItems: 'center',
+      }}>
+        {/* Horizontal printed receipt lines */}
+        <View style={{ width: '80%', height: 1.2, backgroundColor: color }} />
+        <View style={{ width: '60%', height: 1.2, backgroundColor: color }} />
+        <View style={{ width: '70%', height: 1.2, backgroundColor: color }} />
+        <View style={{ width: '45%', height: 1.2, backgroundColor: color }} />
+      </View>
+    </View>
+  );
+}

@@ -10,7 +10,7 @@ import { COLORS, SPACING, SIZES, SHADOWS } from '../constants/theme';
 import { GroupStats } from './GroupPickerScreen';
 import {
   ShoppingBag,
-  BookOpen,
+  Receipt,
   Package,
   Calendar,
   ChevronUp,
@@ -144,7 +144,7 @@ export default function HomeTab({ stats }: HomeTabProps) {
           <CountCard
             label="My Bazar & Bills"
             value={stats.totalMyBazarAndBills}
-            icon={<BookOpen color={COLORS.primary} size={18} />}
+            icon={<Receipt color={COLORS.primary} size={18} />}
           />
         </View>
       </View>
