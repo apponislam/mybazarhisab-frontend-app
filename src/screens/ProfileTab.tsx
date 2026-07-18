@@ -23,7 +23,7 @@ import {
   X,
   ChevronRight,
   CheckCircle,
-  BookOpen,
+  Users,
 } from '../components/CustomIcon';
 import { Avatar, initials } from './ExpensesTab';
 
@@ -165,7 +165,7 @@ export default function ProfileTab({
         <Text style={styles.sectionHeader}>Account</Text>
         <View style={styles.settingsListCard}>
           <SettingsRow
-            icon={<User color={COLORS.primary} size={16} />}
+            icon={<User color={COLORS.primary} size={18} />}
             label="Edit Profile"
             sub="Update your name, photo, address & more"
             onClick={onEditProfile}
@@ -174,7 +174,7 @@ export default function ProfileTab({
           {myGroup && (
             <>
               <SettingsRow
-                icon={<BookOpen color={COLORS.primary} size={16} />}
+                icon={<Users color={COLORS.primary} size={18} />}
                 label="My Group"
                 sub={`${myGroup.name} · Code: ${myGroup.inviteCode}`}
                 onClick={onViewGroupDetails}
@@ -183,14 +183,14 @@ export default function ProfileTab({
             </>
           )}
           <SettingsRow
-            icon={<Lock color={COLORS.primary} size={16} />}
+            icon={<Lock color={COLORS.primary} size={18} />}
             label="Change Password"
             sub="Update your account password"
             onClick={onChangePassword}
           />
           <View style={styles.listLineDivider} />
           <SettingsRow
-            icon={<CheckCircle color={COLORS.primary} size={16} />}
+            icon={<CheckCircle color={COLORS.primary} size={18} />}
             label="Account Info"
             sub="Last login: Today · Member since Jan 2025"
           />
@@ -203,7 +203,7 @@ export default function ProfileTab({
         <View style={styles.overlayContainer}>
           <View style={styles.settingsListCard}>
             <SettingsRow
-              icon={<Plus color={COLORS.primary} size={16} />}
+              icon={<Plus color={COLORS.primary} size={18} />}
               label="Push Notifications"
               sub={
                 pushNotif
@@ -227,7 +227,7 @@ export default function ProfileTab({
             />
             <View style={styles.listLineDivider} />
             <SettingsRow
-              icon={<Mail color={COLORS.primary} size={16} />}
+              icon={<Mail color={COLORS.primary} size={18} />}
               label="Email Notifications"
               sub={
                 emailNotif
@@ -264,7 +264,7 @@ export default function ProfileTab({
         <Text style={styles.sectionHeader}>Preferences</Text>
         <View style={styles.settingsListCard}>
           <SettingsRow
-            icon={<Plus color={COLORS.primary} size={16} />}
+            icon={<Plus color={COLORS.primary} size={18} />}
             label="Address"
             sub={
               loggedInUser?.address
@@ -282,7 +282,7 @@ export default function ProfileTab({
           />
           <View style={styles.listLineDivider} />
           <SettingsRow
-            icon={<User color={COLORS.primary} size={16} />}
+            icon={<User color={COLORS.primary} size={18} />}
             label="About Me"
             sub={loggedInUser?.aboutme || 'No description provided'}
           />
@@ -301,7 +301,7 @@ export default function ProfileTab({
           ]}
         >
           <SettingsRow
-            icon={<X color="#d4183d" size={16} />}
+            icon={<X color="#d4183d" size={18} />}
             label="Sign Out"
             sub="Sign out from this device"
             onClick={handleSignOut}
@@ -314,7 +314,7 @@ export default function ProfileTab({
             ]}
           />
           <SettingsRow
-            icon={<X color="#d4183d" size={16} />}
+            icon={<X color="#d4183d" size={18} />}
             label="Delete Account"
             sub="Permanently remove your account and data"
             onClick={handleDeleteAccount}
@@ -477,7 +477,7 @@ const styles = StyleSheet.create({
   rowIconCircle: {
     width: 36,
     height: 36,
-    borderRadius: 10,
+    borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,

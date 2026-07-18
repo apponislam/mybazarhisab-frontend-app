@@ -20,7 +20,7 @@ import {
 } from '../redux/features/group/groupApi';
 import { useAppSelector } from '../redux/hooks';
 import { currentUser } from '../redux/features/auth/authSlice';
-import { ArrowLeft, BookOpen, X } from '../components/CustomIcon';
+import { ArrowLeft, Users, X } from '../components/CustomIcon';
 import { Avatar } from './ExpensesTab';
 
 interface GroupDetailsScreenProps {
@@ -126,7 +126,7 @@ export default function GroupDetailsScreen({ onBack }: GroupDetailsScreenProps) 
           {/* Header */}
           <View style={styles.screenHeader}>
             <View style={styles.iconCircleHeader}>
-              <BookOpen color={COLORS.primary} size={22} />
+              <Users color={COLORS.primary} size={22} />
             </View>
             <Text style={styles.screenTitle}>Group Details</Text>
             <Text style={styles.screenSubtitle}>

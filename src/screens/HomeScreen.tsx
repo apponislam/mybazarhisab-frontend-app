@@ -25,7 +25,7 @@ import {
 } from '../redux/features/bazarEntry/bazarEntryApi';
 import { useGetUserDashboardStatsQuery } from '../redux/features/dashboard/dashboardApi';
 // Custom icons & components
-import { BookOpen, ShoppingBag, Calendar, User, Plus } from '../components/CustomIcon';
+import { Home, ShoppingBag, Calendar, User, Plus } from '../components/CustomIcon';
 import AddPicker from '../components/AddPicker';
 
 // Screens & Tabs
@@ -510,7 +510,7 @@ export default function HomeScreen() {
           onPress={() => setTab('home')}
           activeOpacity={0.7}
         >
-          <BookOpen color={tab === 'home' ? COLORS.primary : COLORS.textSecondary} size={20} />
+          <Home color={tab === 'home' ? COLORS.primary : COLORS.textSecondary} size={20} />
           <Text style={[styles.tabLabelText, tab === 'home' && { color: COLORS.primary }]}>Home</Text>
           {tab === 'home' && <View style={styles.activeDot} />}
         </TouchableOpacity>
@@ -624,14 +624,20 @@ const styles = StyleSheet.create({
     paddingTop: 4,
   },
   centerAddBtn: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: COLORS.primary,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: -22,
-    ...SHADOWS.md,
+    borderWidth: 2.5,
+    borderColor: 'rgba(232, 160, 32, 0.25)', // glowing ring
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.85,
+    shadowRadius: 10,
+    elevation: 8,
   },
   loadingContainer: {
     flex: 1,

@@ -461,3 +461,128 @@ export function Package({ color = '#e8a020', size = 20, style }: IconProps) {
     </View>
   );
 }
+
+export function Users({ color = '#e8a020', size = 20, style }: IconProps) {
+  // First user in background (offset to the right/top)
+  const bgSize = size * 0.82;
+  const bgHead = bgSize * 0.36;
+  const bgBodyW = bgSize * 0.75;
+  const bgBodyH = bgSize * 0.32;
+
+  // Second user in foreground (offset to the left/bottom)
+  const fgSize = size * 0.82;
+  const fgHead = fgSize * 0.36;
+  const fgBodyW = fgSize * 0.75;
+  const fgBodyH = fgSize * 0.32;
+
+  return (
+    <View style={[{ width: size, height: size, position: 'relative' }, style]}>
+      {/* Background User */}
+      <View style={{
+        position: 'absolute',
+        top: size * 0.04,
+        right: size * 0.04,
+        alignItems: 'center',
+        opacity: 0.6,
+      }}>
+        <View style={{
+          width: bgHead,
+          height: bgHead,
+          borderRadius: bgHead / 2,
+          borderWidth: 1.2,
+          borderColor: color,
+          marginBottom: 1
+        }} />
+        <View style={{
+          width: bgBodyW,
+          height: bgBodyH,
+          borderTopLeftRadius: bgSize * 0.35,
+          borderTopRightRadius: bgSize * 0.35,
+          borderWidth: 1.2,
+          borderBottomWidth: 0,
+          borderColor: color,
+        }} />
+      </View>
+
+      {/* Foreground User */}
+      <View style={{
+        position: 'absolute',
+        bottom: size * 0.04,
+        left: size * 0.04,
+        alignItems: 'center',
+        backgroundColor: '#2e1a0a', // mask the background user body (matches app background)
+        paddingRight: 1,
+        borderRadius: size * 0.3,
+      }}>
+        <View style={{
+          width: fgHead,
+          height: fgHead,
+          borderRadius: fgHead / 2,
+          borderWidth: 1.5,
+          borderColor: color,
+          marginBottom: 2
+        }} />
+        <View style={{
+          width: fgBodyW,
+          height: fgBodyH,
+          borderTopLeftRadius: fgSize * 0.35,
+          borderTopRightRadius: fgSize * 0.35,
+          borderWidth: 1.5,
+          borderBottomWidth: 0,
+          borderColor: color,
+        }} />
+      </View>
+    </View>
+  );
+}
+
+export function Home({ color = '#e8a020', size = 20, style }: IconProps) {
+  const roofHeight = size * 0.42;
+  const baseWidth = size * 0.72;
+  const baseHeight = size * 0.45;
+  const doorWidth = size * 0.22;
+  const doorHeight = size * 0.28;
+
+  return (
+    <View style={[{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }, style]}>
+      {/* Roof - Triangle using borders */}
+      <View style={{
+        width: 0,
+        height: 0,
+        backgroundColor: 'transparent',
+        borderStyle: 'solid',
+        borderLeftWidth: size * 0.45,
+        borderRightWidth: size * 0.45,
+        borderBottomWidth: roofHeight,
+        borderLeftColor: 'transparent',
+        borderRightColor: 'transparent',
+        borderBottomColor: color,
+        position: 'absolute',
+        top: size * 0.06,
+      }} />
+      {/* Base Wall */}
+      <View style={{
+        width: baseWidth,
+        height: baseHeight,
+        borderWidth: 1.5,
+        borderColor: color,
+        borderTopWidth: 0,
+        position: 'absolute',
+        bottom: size * 0.08,
+        justifyContent: 'flex-end',
+        alignItems: 'center',
+      }}>
+        {/* Door */}
+        <View style={{
+          width: doorWidth,
+          height: doorHeight,
+          borderWidth: 1.5,
+          borderColor: color,
+          borderBottomWidth: 0,
+          borderTopLeftRadius: 1.5,
+          borderTopRightRadius: 1.5,
+        }} />
+      </View>
+    </View>
+  );
+}
