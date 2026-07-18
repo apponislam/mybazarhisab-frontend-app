@@ -15,7 +15,10 @@ import { User, Plus } from '../components/CustomIcon';
 // Redux & API
 import { useAppDispatch } from '../redux/hooks';
 import { logout } from '../redux/features/auth/authSlice';
-import { useCreateGroupMutation, useJoinGroupMutation } from '../redux/features/group/groupApi';
+import {
+  useCreateGroupMutation,
+  useJoinGroupMutation,
+} from '../redux/features/group/groupApi';
 import Toast from '../components/Toast';
 
 // Types from web App.tsx
@@ -42,22 +45,22 @@ export interface GroupStats {
 function makeMockStats(groupName: string): GroupStats {
   return {
     groupName,
-    totalMembers: 8,
-    totalGroupBazarAndBills: 134,
-    totalMyBazarAndBills: 47,
-    totalNewProductsCreatedByMe: 23,
-    thisMonthBazarExpense: 12840,
-    prevMonthBazarExpense: 10950,
-    thisYearBazarExpense: 98400,
-    prevYearBazarExpense: 87200,
-    thisMonthBillExpense: 4200,
-    prevMonthBillExpense: 5100,
-    thisYearBillExpense: 43600,
-    prevYearBillExpense: 39800,
-    thisMonthTotalExpense: 17040,
-    prevMonthTotalExpense: 16050,
-    thisYearTotalExpense: 142000,
-    prevYearTotalExpense: 127000,
+    totalMembers: 0,
+    totalGroupBazarAndBills: 0,
+    totalMyBazarAndBills: 0,
+    totalNewProductsCreatedByMe: 0,
+    thisMonthBazarExpense: 0,
+    prevMonthBazarExpense: 0,
+    thisYearBazarExpense: 0,
+    prevYearBazarExpense: 0,
+    thisMonthBillExpense: 0,
+    prevMonthBillExpense: 0,
+    thisYearBillExpense: 0,
+    prevYearBillExpense: 0,
+    thisMonthTotalExpense: 0,
+    prevMonthTotalExpense: 0,
+    thisYearTotalExpense: 0,
+    prevYearTotalExpense: 0,
   };
 }
 
@@ -72,12 +75,16 @@ export default function GroupPickerScreen({ onGroupReady }: GroupPickerProps) {
 
   const [joinCode, setJoinCode] = useState('');
   const [groupName, setGroupName] = useState('');
-  
+
   const [jf, setJf] = useState(false);
   const [cf, setCf] = useState(false);
 
   // Toast notification state
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error'; visible: boolean }>({
+  const [toast, setToast] = useState<{
+    message: string;
+    type: 'success' | 'error';
+    visible: boolean;
+  }>({
     message: '',
     type: 'success',
     visible: false,
@@ -102,7 +109,12 @@ export default function GroupPickerScreen({ onGroupReady }: GroupPickerProps) {
       }
     } catch (err: any) {
       console.log('Join group error:', err);
-      showToast(err?.data?.message || err?.message || 'An error occurred during joining', 'error');
+      showToast(
+        err?.data?.message ||
+          err?.message ||
+          'An error occurred during joining',
+        'error',
+      );
     }
   };
 
@@ -117,7 +129,12 @@ export default function GroupPickerScreen({ onGroupReady }: GroupPickerProps) {
       }
     } catch (err: any) {
       console.log('Create group error:', err);
-      showToast(err?.data?.message || err?.message || 'An error occurred during creation', 'error');
+      showToast(
+        err?.data?.message ||
+          err?.message ||
+          'An error occurred during creation',
+        'error',
+      );
     }
   };
 
@@ -130,7 +147,9 @@ export default function GroupPickerScreen({ onGroupReady }: GroupPickerProps) {
       {/* Header */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.headerTitle}>My Bazar <Text style={{ color: COLORS.primary }}>Hisab</Text></Text>
+          <Text style={styles.headerTitle}>
+            My Bazar <Text style={{ color: COLORS.primary }}>Hisab</Text>
+          </Text>
           <Text style={styles.headerSubtitle}>Manage your market groups</Text>
         </View>
         <View style={styles.headerLogoCircle}>
@@ -139,25 +158,39 @@ export default function GroupPickerScreen({ onGroupReady }: GroupPickerProps) {
       </View>
       <View style={styles.divider} />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+      >
         {/* Section 1: Join Group */}
         <View style={[styles.card, SHADOWS.lg]}>
           <View style={styles.cardHeader}>
-            <View style={[styles.iconCircle, { backgroundColor: COLORS.primaryGlow }]}>
+            <View
+              style={[
+                styles.iconCircle,
+                { backgroundColor: COLORS.primaryGlow },
+              ]}
+            >
               <User color={COLORS.primary} size={18} />
             </View>
             <View>
               <Text style={styles.cardTitle}>Join a Group</Text>
-              <Text style={styles.cardSubtitle}>Enter a code shared by your admin</Text>
+              <Text style={styles.cardSubtitle}>
+                Enter a code shared by your admin
+              </Text>
             </View>
           </View>
 
           <View style={[styles.inputWrapper, jf && styles.inputWrapperFocused]}>
-            <User color={COLORS.textSecondary} size={16} style={styles.inputIcon} />
+            <User
+              color={COLORS.textSecondary}
+              size={16}
+              style={styles.inputIcon}
+            />
             <TextInput
               style={styles.textInput}
               value={joinCode}
-              onChangeText={(val) => setJoinCode(val.toUpperCase())}
+              onChangeText={val => setJoinCode(val.toUpperCase())}
               placeholder="e.g. BZR-4821"
               placeholderTextColor={COLORS.placeholder}
               onFocus={() => setJf(true)}
@@ -170,7 +203,7 @@ export default function GroupPickerScreen({ onGroupReady }: GroupPickerProps) {
           <TouchableOpacity
             style={[
               styles.primaryButton,
-              (isJoining || !joinCode.trim()) && styles.primaryButtonDisabled
+              (isJoining || !joinCode.trim()) && styles.primaryButtonDisabled,
             ]}
             onPress={handleJoinGroup}
             disabled={isJoining || isCreating || !joinCode.trim()}
@@ -194,17 +227,28 @@ export default function GroupPickerScreen({ onGroupReady }: GroupPickerProps) {
         {/* Section 2: Create Group */}
         <View style={[styles.card, SHADOWS.lg]}>
           <View style={styles.cardHeader}>
-            <View style={[styles.iconCircle, { backgroundColor: COLORS.accentGlow }]}>
+            <View
+              style={[
+                styles.iconCircle,
+                { backgroundColor: COLORS.accentGlow },
+              ]}
+            >
               <Plus color={COLORS.accent} size={18} />
             </View>
             <View>
               <Text style={styles.cardTitle}>Create a Group</Text>
-              <Text style={styles.cardSubtitle}>Start a new bazar hisab group</Text>
+              <Text style={styles.cardSubtitle}>
+                Start a new bazar hisab group
+              </Text>
             </View>
           </View>
 
           <View style={[styles.inputWrapper, cf && styles.inputWrapperFocused]}>
-            <User color={COLORS.textSecondary} size={16} style={styles.inputIcon} />
+            <User
+              color={COLORS.textSecondary}
+              size={16}
+              style={styles.inputIcon}
+            />
             <TextInput
               style={styles.textInput}
               value={groupName}
@@ -220,7 +264,7 @@ export default function GroupPickerScreen({ onGroupReady }: GroupPickerProps) {
             style={[
               styles.outlineButton,
               { borderColor: COLORS.accent },
-              (isCreating || !groupName.trim()) && styles.outlineButtonDisabled
+              (isCreating || !groupName.trim()) && styles.outlineButtonDisabled,
             ]}
             onPress={handleCreateGroup}
             disabled={isCreating || isJoining || !groupName.trim()}

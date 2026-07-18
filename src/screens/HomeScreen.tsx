@@ -15,8 +15,14 @@ import { COLORS, SPACING, SIZES, SHADOWS } from '../constants/theme';
 
 // Redux & API
 import { useAppSelector, useAppDispatch } from '../redux/hooks';
-import { hasGroup as selectHasGroup, currentUser } from '../redux/features/auth/authSlice';
-import { useLazyCheckGroupQuery, useGetMyGroupQuery } from '../redux/features/group/groupApi';
+import {
+  hasGroup as selectHasGroup,
+  currentUser,
+} from '../redux/features/auth/authSlice';
+import {
+  useLazyCheckGroupQuery,
+  useGetMyGroupQuery,
+} from '../redux/features/group/groupApi';
 import {
   useGetBazarEntriesQuery,
   useGetBazarEntryStatsQuery,
@@ -25,13 +31,23 @@ import {
 } from '../redux/features/bazarEntry/bazarEntryApi';
 import { useGetUserDashboardStatsQuery } from '../redux/features/dashboard/dashboardApi';
 // Custom icons & components
-import { Home, ShoppingBag, Calendar, User, Plus } from '../components/CustomIcon';
+import {
+  Home,
+  ShoppingBag,
+  Calendar,
+  User,
+  Plus,
+} from '../components/CustomIcon';
 import AddPicker from '../components/AddPicker';
 
 // Screens & Tabs
 import GroupPickerScreen, { GroupStats } from './GroupPickerScreen';
 import HomeTab from './HomeTab';
-import ExpensesTab, { MockBazarEntry, MockUser, MockProduct } from './ExpensesTab';
+import ExpensesTab, {
+  MockBazarEntry,
+  MockUser,
+  MockProduct,
+} from './ExpensesTab';
 import BillsTab, { MockBill } from './BillsTab';
 import ProfileTab from './ProfileTab';
 import AddExpenseScreen from './AddExpenseScreen';
@@ -52,7 +68,13 @@ function getEmojiForProduct(name: string): string {
   if (n.includes('potato') || n.includes('alu')) return '🥔';
   if (n.includes('tomato')) return '🍅';
   if (n.includes('fish') || n.includes('mach')) return '🐟';
-  if (n.includes('meat') || n.includes('beef') || n.includes('chicken') || n.includes('murgi')) return '🍗';
+  if (
+    n.includes('meat') ||
+    n.includes('beef') ||
+    n.includes('chicken') ||
+    n.includes('murgi')
+  )
+    return '🍗';
   if (n.includes('egg') || n.includes('dim')) return '🥚';
   if (n.includes('oil') || n.includes('tel')) return '🫙';
   if (n.includes('garlic') || n.includes('rosun')) return '🧄';
@@ -70,10 +92,28 @@ function formatDateDisplay(dateStr: string): string {
     d.getMonth() === today.getMonth() &&
     d.getDate() === today.getDate();
 
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
   const dayStr = `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
 
-  return isToday ? `Today, ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : dayStr;
+  return isToday
+    ? `Today, ${d.toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+      })}`
+    : dayStr;
 }
 
 function mapApiToMockEntry(item: any): MockBazarEntry {
@@ -102,10 +142,30 @@ function mapApiToMockEntry(item: any): MockBazarEntry {
 
 // ─── Initial Mock Data ────────────────────────────────────────────────────────
 const MOCK_USERS: MockUser[] = [
-  { id: 'u1', name: 'Ahmed Hassan', email: 'ahmed@email.com', phone: '+880 1711 234567' },
-  { id: 'u2', name: 'Fatima Begum', email: 'fatima@email.com', phone: '+880 1812 345678' },
-  { id: 'u3', name: 'Karim Uddin', email: 'karim@email.com', phone: '+880 1913 456789' },
-  { id: 'u4', name: 'Rahima Khatun', email: 'rahima@email.com', phone: '+880 1614 567890' },
+  {
+    id: 'u1',
+    name: 'Ahmed Hassan',
+    email: 'ahmed@email.com',
+    phone: '+880 1711 234567',
+  },
+  {
+    id: 'u2',
+    name: 'Fatima Begum',
+    email: 'fatima@email.com',
+    phone: '+880 1812 345678',
+  },
+  {
+    id: 'u3',
+    name: 'Karim Uddin',
+    email: 'karim@email.com',
+    phone: '+880 1913 456789',
+  },
+  {
+    id: 'u4',
+    name: 'Rahima Khatun',
+    email: 'rahima@email.com',
+    phone: '+880 1614 567890',
+  },
 ];
 
 const MOCK_PRODUCTS: MockProduct[] = [
@@ -122,27 +182,170 @@ const MOCK_PRODUCTS: MockProduct[] = [
 ];
 
 const INITIAL_ENTRIES: MockBazarEntry[] = [
-  { id: 'e1', product: MOCK_PRODUCTS[4], price: 480, quantity: 1, unit: 'KG', date: 'July 12, 10:15 AM', notes: 'Fresh from Karwan Bazar', user: MOCK_USERS[0] },
-  { id: 'e2', product: MOCK_PRODUCTS[3], price: 70, quantity: 5, unit: 'KG', date: 'July 12, 09:30 AM', user: MOCK_USERS[1] },
-  { id: 'e3', product: MOCK_PRODUCTS[0], price: 55, quantity: 2, unit: 'KG', date: 'July 11, 06:45 PM', user: MOCK_USERS[2] },
-  { id: 'e4', product: MOCK_PRODUCTS[5], price: 220, quantity: 1.5, unit: 'KG', date: 'July 11, 11:20 AM', notes: 'Country chicken', user: MOCK_USERS[0] },
-  { id: 'e5', product: MOCK_PRODUCTS[6], price: 145, quantity: 12, unit: 'PIECE', date: 'July 10, 08:30 AM', user: MOCK_USERS[3] },
-  { id: 'e6', product: MOCK_PRODUCTS[7], price: 185, quantity: 2, unit: 'PIECE', date: 'July 10, 04:00 PM', notes: '5L bottle', user: MOCK_USERS[1] },
-  { id: 'e7', product: MOCK_PRODUCTS[2], price: 60, quantity: 1, unit: 'KG', date: 'June 25, 11:15 AM', user: MOCK_USERS[2] },
-  { id: 'e8', product: MOCK_PRODUCTS[9], price: 110, quantity: 500, unit: 'GM', date: 'June 22, 05:30 PM', user: MOCK_USERS[0] },
-  { id: 'e9', product: MOCK_PRODUCTS[1], price: 40, quantity: 3, unit: 'KG', date: 'June 18, 08:15 AM', user: MOCK_USERS[3] },
-  { id: 'e10', product: MOCK_PRODUCTS[8], price: 30, quantity: 250, unit: 'GM', date: 'June 15, 06:12 PM', notes: 'Local market', user: MOCK_USERS[1] },
+  {
+    id: 'e1',
+    product: MOCK_PRODUCTS[4],
+    price: 480,
+    quantity: 1,
+    unit: 'KG',
+    date: 'July 12, 10:15 AM',
+    notes: 'Fresh from Karwan Bazar',
+    user: MOCK_USERS[0],
+  },
+  {
+    id: 'e2',
+    product: MOCK_PRODUCTS[3],
+    price: 70,
+    quantity: 5,
+    unit: 'KG',
+    date: 'July 12, 09:30 AM',
+    user: MOCK_USERS[1],
+  },
+  {
+    id: 'e3',
+    product: MOCK_PRODUCTS[0],
+    price: 55,
+    quantity: 2,
+    unit: 'KG',
+    date: 'July 11, 06:45 PM',
+    user: MOCK_USERS[2],
+  },
+  {
+    id: 'e4',
+    product: MOCK_PRODUCTS[5],
+    price: 220,
+    quantity: 1.5,
+    unit: 'KG',
+    date: 'July 11, 11:20 AM',
+    notes: 'Country chicken',
+    user: MOCK_USERS[0],
+  },
+  {
+    id: 'e5',
+    product: MOCK_PRODUCTS[6],
+    price: 145,
+    quantity: 12,
+    unit: 'PIECE',
+    date: 'July 10, 08:30 AM',
+    user: MOCK_USERS[3],
+  },
+  {
+    id: 'e6',
+    product: MOCK_PRODUCTS[7],
+    price: 185,
+    quantity: 2,
+    unit: 'PIECE',
+    date: 'July 10, 04:00 PM',
+    notes: '5L bottle',
+    user: MOCK_USERS[1],
+  },
+  {
+    id: 'e7',
+    product: MOCK_PRODUCTS[2],
+    price: 60,
+    quantity: 1,
+    unit: 'KG',
+    date: 'June 25, 11:15 AM',
+    user: MOCK_USERS[2],
+  },
+  {
+    id: 'e8',
+    product: MOCK_PRODUCTS[9],
+    price: 110,
+    quantity: 500,
+    unit: 'GM',
+    date: 'June 22, 05:30 PM',
+    user: MOCK_USERS[0],
+  },
+  {
+    id: 'e9',
+    product: MOCK_PRODUCTS[1],
+    price: 40,
+    quantity: 3,
+    unit: 'KG',
+    date: 'June 18, 08:15 AM',
+    user: MOCK_USERS[3],
+  },
+  {
+    id: 'e10',
+    product: MOCK_PRODUCTS[8],
+    price: 30,
+    quantity: 250,
+    unit: 'GM',
+    date: 'June 15, 06:12 PM',
+    notes: 'Local market',
+    user: MOCK_USERS[1],
+  },
 ];
 
 const INITIAL_BILLS: MockBill[] = [
-  { id: 'b1', user: MOCK_USERS[0], category: 'RENT', title: 'House Rent', amount: 18000, date: 'July 5, 2026', notes: 'Paid to landlord Alam saheb' },
-  { id: 'b2', user: MOCK_USERS[1], category: 'WIFI', title: 'Grameenphone Broadband', amount: 1200, date: 'July 3, 2026' },
-  { id: 'b3', user: MOCK_USERS[2], category: 'ELECTRICITY', title: 'DESCO Bill', amount: 2400, date: 'July 8, 2026', notes: 'AC usage high' },
-  { id: 'b4', user: MOCK_USERS[0], category: 'GAS', title: 'Titas Gas Bill', amount: 950, date: 'July 7, 2026' },
-  { id: 'b5', user: MOCK_USERS[3], category: 'MAID', title: 'House Maid Salary', amount: 3500, date: 'July 1, 2026' },
-  { id: 'b6', user: MOCK_USERS[1], category: 'MOBILE', title: 'Robi Recharge', amount: 500, date: 'July 6, 2026' },
-  { id: 'b7', user: MOCK_USERS[2], category: 'MEDICAL', title: 'Square Hospital Visit', amount: 1800, date: 'June 20, 2026', notes: 'Dr. Rahman consultation' },
-  { id: 'b8', user: MOCK_USERS[0], category: 'SUBSCRIPTION', title: 'Netflix Monthly', amount: 399, date: 'June 2, 2026' },
+  {
+    id: 'b1',
+    user: MOCK_USERS[0],
+    category: 'RENT',
+    title: 'House Rent',
+    amount: 18000,
+    date: 'July 5, 2026',
+    notes: 'Paid to landlord Alam saheb',
+  },
+  {
+    id: 'b2',
+    user: MOCK_USERS[1],
+    category: 'WIFI',
+    title: 'Grameenphone Broadband',
+    amount: 1200,
+    date: 'July 3, 2026',
+  },
+  {
+    id: 'b3',
+    user: MOCK_USERS[2],
+    category: 'ELECTRICITY',
+    title: 'DESCO Bill',
+    amount: 2400,
+    date: 'July 8, 2026',
+    notes: 'AC usage high',
+  },
+  {
+    id: 'b4',
+    user: MOCK_USERS[0],
+    category: 'GAS',
+    title: 'Titas Gas Bill',
+    amount: 950,
+    date: 'July 7, 2026',
+  },
+  {
+    id: 'b5',
+    user: MOCK_USERS[3],
+    category: 'MAID',
+    title: 'House Maid Salary',
+    amount: 3500,
+    date: 'July 1, 2026',
+  },
+  {
+    id: 'b6',
+    user: MOCK_USERS[1],
+    category: 'MOBILE',
+    title: 'Robi Recharge',
+    amount: 500,
+    date: 'July 6, 2026',
+  },
+  {
+    id: 'b7',
+    user: MOCK_USERS[2],
+    category: 'MEDICAL',
+    title: 'Square Hospital Visit',
+    amount: 1800,
+    date: 'June 20, 2026',
+    notes: 'Dr. Rahman consultation',
+  },
+  {
+    id: 'b8',
+    user: MOCK_USERS[0],
+    category: 'SUBSCRIPTION',
+    title: 'Netflix Monthly',
+    amount: 399,
+    date: 'June 2, 2026',
+  },
 ];
 
 type AppTabType = 'home' | 'expenses' | 'bills' | 'profile';
@@ -171,35 +374,45 @@ export default function HomeScreen() {
   const [bills, setBills] = useState<MockBill[]>(INITIAL_BILLS);
 
   // Selected Detail states
-  const [selectedEntry, setSelectedEntry] = useState<MockBazarEntry | null>(null);
+  const [selectedEntry, setSelectedEntry] = useState<MockBazarEntry | null>(
+    null,
+  );
   const [selectedBill, setSelectedBill] = useState<MockBill | null>(null);
 
   // Navigation history stack to track active tabs and subscreen navigation history
-  const [navHistory, setNavHistory] = useState<{
-    tab: AppTabType;
-    subScreen: AppSubScreenType;
-    selectedEntry: MockBazarEntry | null;
-    selectedBill: MockBill | null;
-  }[]>([{ tab: 'home', subScreen: null, selectedEntry: null, selectedBill: null }]);
+  const [navHistory, setNavHistory] = useState<
+    {
+      tab: AppTabType;
+      subScreen: AppSubScreenType;
+      selectedEntry: MockBazarEntry | null;
+      selectedBill: MockBill | null;
+    }[]
+  >([
+    { tab: 'home', subScreen: null, selectedEntry: null, selectedBill: null },
+  ]);
 
   const loggedInUser = useAppSelector(currentUser);
   const myUserId = loggedInUser?._id || 'u1';
 
   // Helper calculation update to pass updated totals into Group stats dynamically
   const calculateStats = (groupName: string): GroupStats => {
-    const totalBazar = statsData?.data?.totalAmount ?? entries.reduce((s, e) => s + e.price * e.quantity, 0);
+    const totalBazar =
+      statsData?.data?.totalAmount ??
+      entries.reduce((s, e) => s + e.price * e.quantity, 0);
     const totalBill = bills.reduce((s, b) => s + b.amount, 0);
-    
+
     // My Bazar entries
-    const myEntries = entries.filter((e) => e.user.id === myUserId);
-    const myBazarExpense = myEntries.reduce((s, e) => s + e.price * e.quantity, 0);
-    const myBillExpense = bills.filter((b) => b.user.id === myUserId).reduce((s, b) => s + b.amount, 0);
+    const myEntries = entries.filter(e => e.user.id === myUserId);
+    // const myBazarExpense = myEntries.reduce((s, e) => s + e.price * e.quantity, 0);
+    // const myBillExpense = bills.filter((b) => b.user.id === myUserId).reduce((s, b) => s + b.amount, 0);
 
     return {
       groupName,
       totalMembers: 4,
-      totalGroupBazarAndBills: (statsData?.data?.totalEntries ?? entries.length) + bills.length,
-      totalMyBazarAndBills: myEntries.length + bills.filter((b) => b.user.id === myUserId).length,
+      totalGroupBazarAndBills:
+        (statsData?.data?.totalEntries ?? entries.length) + bills.length,
+      totalMyBazarAndBills:
+        myEntries.length + bills.filter(b => b.user.id === myUserId).length,
       totalNewProductsCreatedByMe: 8,
       thisMonthBazarExpense: totalBazar,
       prevMonthBazarExpense: 10950,
@@ -217,10 +430,14 @@ export default function HomeScreen() {
   };
 
   const userHasGroup = useAppSelector(selectHasGroup);
-  const [triggerCheckGroup, { isFetching: isChecking }] = useLazyCheckGroupQuery();
-  const { data: myGroupData, isFetching: isFetchingGroup } = useGetMyGroupQuery(undefined, {
-    skip: !userHasGroup,
-  });
+  const [triggerCheckGroup, { isFetching: isChecking }] =
+    useLazyCheckGroupQuery();
+  const { data: myGroupData, isFetching: isFetchingGroup } = useGetMyGroupQuery(
+    undefined,
+    {
+      skip: !userHasGroup,
+    },
+  );
 
   // RTK Query API Hooks
   const { data: bazarData } = useGetBazarEntriesQuery(undefined, {
@@ -250,7 +467,9 @@ export default function HomeScreen() {
 
   useEffect(() => {
     if (userHasGroup === true && myGroupData?.data) {
-      setGroupStats(dashboardData?.data || calculateStats(myGroupData.data.name));
+      setGroupStats(
+        dashboardData?.data || calculateStats(myGroupData.data.name),
+      );
     } else if (userHasGroup === false) {
       setGroupStats(null);
     }
@@ -258,7 +477,7 @@ export default function HomeScreen() {
 
   // Synchronize navigation history stack when tab, subScreen, selectedEntry, or selectedBill change
   useEffect(() => {
-    setNavHistory((prev) => {
+    setNavHistory(prev => {
       const current = prev[prev.length - 1];
 
       // Detect if this matches the second-to-last item (meaning a Back navigation Pop occurred)
@@ -302,7 +521,7 @@ export default function HomeScreen() {
       // 2. If we have a navigation history stack, go back to previous screen
       if (navHistory.length > 1) {
         const penult = navHistory[navHistory.length - 2];
-        
+
         // This triggers the useEffect above to pop correctly
         setTab(penult.tab);
         setSubScreen(penult.subScreen);
@@ -315,7 +534,10 @@ export default function HomeScreen() {
       return false;
     };
 
-    const subscription = BackHandler.addEventListener('hardwareBackPress', handleBackPress);
+    const subscription = BackHandler.addEventListener(
+      'hardwareBackPress',
+      handleBackPress,
+    );
     return () => subscription.remove();
   }, [navHistory, showAddPicker]);
 
@@ -331,7 +553,7 @@ export default function HomeScreen() {
   // Render Gate 1: Join/Create group selection
   // Only show GroupPickerScreen if user explicitly has no group
   if (userHasGroup === false) {
-    return <GroupPickerScreen onGroupReady={(s) => setGroupStats(s)} />;
+    return <GroupPickerScreen onGroupReady={s => setGroupStats(s)} />;
   }
 
   // If user has a group but group statistics/details are still loading, show loading spinner
@@ -345,7 +567,11 @@ export default function HomeScreen() {
 
   // Get active stats object dynamically calculated
   const activeStats = dashboardData?.data
-    ? { ...dashboardData.data, groupName: groupStats?.groupName || myGroupData?.data?.name || 'My Group' }
+    ? {
+        ...dashboardData.data,
+        groupName:
+          groupStats?.groupName || myGroupData?.data?.name || 'My Group',
+      }
     : calculateStats(groupStats?.groupName || 'My Group');
 
   // Render Gate 2: Detail or Edit screens
@@ -376,7 +602,7 @@ export default function HomeScreen() {
       <ExpenseEditScreen
         entry={selectedEntry}
         onBack={() => setSubScreen('expense-detail')}
-        onSave={async (updated) => {
+        onSave={async updated => {
           try {
             await updateBazarEntry({
               id: updated.id,
@@ -407,7 +633,7 @@ export default function HomeScreen() {
         }}
         onEdit={() => setSubScreen('bill-edit')}
         onDelete={() => {
-          setBills((bs) => bs.filter((b) => b.id !== selectedBill.id));
+          setBills(bs => bs.filter(b => b.id !== selectedBill.id));
           setSelectedBill(null);
           setSubScreen(null);
         }}
@@ -420,8 +646,8 @@ export default function HomeScreen() {
       <BillEditScreen
         bill={selectedBill}
         onBack={() => setSubScreen('bill-detail')}
-        onSave={(updated) => {
-          setBills((bs) => bs.map((b) => (b.id === updated.id ? updated : b)));
+        onSave={updated => {
+          setBills(bs => bs.map(b => (b.id === updated.id ? updated : b)));
           setSelectedBill(updated);
           setSubScreen('bill-detail');
         }}
@@ -433,8 +659,8 @@ export default function HomeScreen() {
     return (
       <AddExpenseScreen
         onBack={() => setSubScreen(null)}
-        onDone={(newEntry) => {
-          setEntries((es) => [newEntry, ...es]);
+        onDone={newEntry => {
+          setEntries(es => [newEntry, ...es]);
           setSubScreen(null);
           setTab('expenses');
         }}
@@ -446,8 +672,8 @@ export default function HomeScreen() {
     return (
       <AddBillScreen
         onBack={() => setSubScreen(null)}
-        onDone={(newBill) => {
-          setBills((bs) => [newBill, ...bs]);
+        onDone={newBill => {
+          setBills(bs => [newBill, ...bs]);
           setSubScreen(null);
           setTab('bills');
         }}
@@ -476,7 +702,7 @@ export default function HomeScreen() {
         return (
           <ExpensesTab
             entries={entries}
-            onDetail={(e) => {
+            onDetail={e => {
               setSelectedEntry(e);
               setSubScreen('expense-detail');
             }}
@@ -486,7 +712,7 @@ export default function HomeScreen() {
         return (
           <BillsTab
             bills={bills}
-            onDetail={(b) => {
+            onDetail={b => {
               setSelectedBill(b);
               setSubScreen('bill-detail');
             }}
@@ -508,7 +734,7 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.background} />
-      
+
       {/* Central Screen Tab Content */}
       <View style={styles.contentArea}>{renderTabContent()}</View>
 
@@ -520,8 +746,18 @@ export default function HomeScreen() {
           onPress={() => setTab('home')}
           activeOpacity={0.7}
         >
-          <Home color={tab === 'home' ? COLORS.primary : COLORS.textSecondary} size={20} />
-          <Text style={[styles.tabLabelText, tab === 'home' && { color: COLORS.primary }]}>Home</Text>
+          <Home
+            color={tab === 'home' ? COLORS.primary : COLORS.textSecondary}
+            size={20}
+          />
+          <Text
+            style={[
+              styles.tabLabelText,
+              tab === 'home' && { color: COLORS.primary },
+            ]}
+          >
+            Home
+          </Text>
           {tab === 'home' && <View style={styles.activeDot} />}
         </TouchableOpacity>
 
@@ -531,8 +767,18 @@ export default function HomeScreen() {
           onPress={() => setTab('expenses')}
           activeOpacity={0.7}
         >
-          <ShoppingBag color={tab === 'expenses' ? COLORS.primary : COLORS.textSecondary} size={20} />
-          <Text style={[styles.tabLabelText, tab === 'expenses' && { color: COLORS.primary }]}>Expenses</Text>
+          <ShoppingBag
+            color={tab === 'expenses' ? COLORS.primary : COLORS.textSecondary}
+            size={20}
+          />
+          <Text
+            style={[
+              styles.tabLabelText,
+              tab === 'expenses' && { color: COLORS.primary },
+            ]}
+          >
+            Expenses
+          </Text>
           {tab === 'expenses' && <View style={styles.activeDot} />}
         </TouchableOpacity>
 
@@ -554,8 +800,18 @@ export default function HomeScreen() {
           onPress={() => setTab('bills')}
           activeOpacity={0.7}
         >
-          <Calendar color={tab === 'bills' ? COLORS.primary : COLORS.textSecondary} size={20} />
-          <Text style={[styles.tabLabelText, tab === 'bills' && { color: COLORS.primary }]}>Bills</Text>
+          <Calendar
+            color={tab === 'bills' ? COLORS.primary : COLORS.textSecondary}
+            size={20}
+          />
+          <Text
+            style={[
+              styles.tabLabelText,
+              tab === 'bills' && { color: COLORS.primary },
+            ]}
+          >
+            Bills
+          </Text>
           {tab === 'bills' && <View style={styles.activeDot} />}
         </TouchableOpacity>
 
@@ -565,8 +821,18 @@ export default function HomeScreen() {
           onPress={() => setTab('profile')}
           activeOpacity={0.7}
         >
-          <User color={tab === 'profile' ? COLORS.primary : COLORS.textSecondary} size={20} />
-          <Text style={[styles.tabLabelText, tab === 'profile' && { color: COLORS.primary }]}>Profile</Text>
+          <User
+            color={tab === 'profile' ? COLORS.primary : COLORS.textSecondary}
+            size={20}
+          />
+          <Text
+            style={[
+              styles.tabLabelText,
+              tab === 'profile' && { color: COLORS.primary },
+            ]}
+          >
+            Profile
+          </Text>
           {tab === 'profile' && <View style={styles.activeDot} />}
         </TouchableOpacity>
       </View>
