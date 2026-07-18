@@ -138,37 +138,33 @@ export default function GroupDetailsScreen({ onBack }: GroupDetailsScreenProps) 
           <View style={styles.groupInfoCard}>
             <View style={styles.groupHeaderRow}>
               <Text style={styles.groupModalName}>{myGroup.name}</Text>
-              {isCreator && (
-                <TouchableOpacity
-                  onPress={() => {
-                    setNewName(myGroup.name);
-                    setShowEditName(true);
-                  }}
-                  style={styles.editNameBtn}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.editText}>Edit</Text>
-                </TouchableOpacity>
-              )}
+              <TouchableOpacity
+                onPress={() => {
+                  setNewName(myGroup.name);
+                  setShowEditName(true);
+                }}
+                style={styles.editNameBtn}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.editText}>Edit</Text>
+              </TouchableOpacity>
             </View>
             
             <View style={styles.codeContainer}>
               <Text style={styles.codeLabel}>Invite Code:</Text>
               <Text style={styles.codeValue}>{myGroup.inviteCode}</Text>
-              {isCreator && (
-                <TouchableOpacity
-                  onPress={handleRegenerateInviteCode}
-                  style={styles.regenCodeBtn}
-                  activeOpacity={0.7}
-                  disabled={isRegeneratingCode}
-                >
-                  {isRegeneratingCode ? (
-                    <ActivityIndicator size="small" color={COLORS.primary} />
-                  ) : (
-                    <Text style={styles.regenText}>Generate New</Text>
-                  )}
-                </TouchableOpacity>
-              )}
+              <TouchableOpacity
+                onPress={handleRegenerateInviteCode}
+                style={styles.regenCodeBtn}
+                activeOpacity={0.7}
+                disabled={isRegeneratingCode}
+              >
+                {isRegeneratingCode ? (
+                  <ActivityIndicator size="small" color={COLORS.primary} />
+                ) : (
+                  <Text style={styles.regenText}>Generate New</Text>
+                )}
+              </TouchableOpacity>
             </View>
             
             <View style={styles.creatorContainer}>
@@ -457,20 +453,22 @@ const styles = StyleSheet.create({
   },
   regenCodeBtn: {
     marginLeft: 'auto',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    backgroundColor: 'rgba(232, 160, 32, 0.1)',
-    borderWidth: 1,
-    borderColor: 'rgba(232, 160, 32, 0.3)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    backgroundColor: 'rgba(232, 160, 32, 0.08)',
+    borderWidth: 1.2,
+    borderColor: 'rgba(232, 160, 32, 0.25)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   regenText: {
     color: COLORS.primary,
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: 'bold',
     fontFamily: 'sans-serif',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
   },
   leaveGroupBtn: {
     height: 50,

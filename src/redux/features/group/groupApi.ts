@@ -111,8 +111,8 @@ export const groupApi = baseApi.injectEndpoints({
     }),
     generateInviteCode: builder.mutation<{ success: boolean; message: string; data: any }, void>({
       query: () => ({
-        url: 'groups/invite-code',
-        method: 'PATCH',
+        url: 'groups/generate-code',
+        method: 'POST',
       }),
     }),
   }),
