@@ -125,31 +125,18 @@ export function BillRow({ bill, onClick }: BillRowProps) {
       style={[styles.billRowCard, SHADOWS.sm]}
       activeOpacity={0.8}
     >
-      {/* Colored Icon box */}
-      <View
-        style={[
-          styles.iconContainer,
-          {
-            backgroundColor: `${meta.color}20`,
-            borderColor: `${meta.color}40`,
-          },
-        ]}
-      >
-        {meta.icon({ color: meta.color, size: 22 })}
-      </View>
-
       <View style={styles.centerInfo}>
         <Text style={styles.billTitle}>{bill.title}</Text>
         <View style={styles.userRow}>
           <Avatar user={bill.user} size={16} />
-          <Text style={styles.userName} numberOfLines={1}>
-            {bill.user.name}
-          </Text>
+          <Text style={styles.userName} numberOfLines={1}>{bill.user.name}</Text>
         </View>
         <View style={styles.badgeRow}>
-          <View style={[styles.badge, { backgroundColor: `${meta.color}18` }]}>
-            <Text style={[styles.badgeText, { color: meta.color }]}>{meta.label}</Text>
-          </View>
+          <MetaInfo
+            label={meta.label}
+            icon={meta.icon({ color: meta.color, size: 22 })}
+            color={meta.color}
+          />
           <Text style={styles.dateText}>{bill.date}</Text>
         </View>
       </View>
