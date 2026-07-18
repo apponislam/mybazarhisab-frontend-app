@@ -86,6 +86,35 @@ export const groupApi = baseApi.injectEndpoints({
         }
       },
     }),
+    leaveGroup: builder.mutation<{ success: boolean; message: string; data: any }, void>({
+      query: () => ({
+        url: 'groups/leave',
+        method: 'DELETE',
+      }),
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          if (data?.success) {
+            dispatch(setHasGroup(false));
+          }
+        } catch (err) {
+          console.log('Failed to leave group:', err);
+        }
+      },
+    }),
+    updateGroup: builder.mutation<{ success: boolean; message: string; data: any }, { name: string }>({
+      query: (body) => ({
+        url: 'groups',
+        method: 'PATCH',
+        body,
+      }),
+    }),
+    generateInviteCode: builder.mutation<{ success: boolean; message: string; data: any }, void>({
+      query: () => ({
+        url: 'groups/invite-code',
+        method: 'PATCH',
+      }),
+    }),
   }),
 });
 
@@ -96,4 +125,7 @@ export const {
   useLazyGetMyGroupQuery,
   useCreateGroupMutation,
   useJoinGroupMutation,
+  useLeaveGroupMutation,
+  useUpdateGroupMutation,
+  useGenerateInviteCodeMutation,
 } = groupApi;

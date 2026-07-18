@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   StyleSheet,
   View,
@@ -7,10 +7,20 @@ import {
   TouchableOpacity,
   Platform,
   ActivityIndicator,
+  Alert,
+  TextInput,
+  Modal,
 } from 'react-native';
 import { COLORS, SPACING, SIZES, SHADOWS } from '../constants/theme';
-import { useGetMyGroupQuery } from '../redux/features/group/groupApi';
-import { ArrowLeft, BookOpen } from '../components/CustomIcon';
+import {
+  useGetMyGroupQuery,
+  useLeaveGroupMutation,
+  useUpdateGroupMutation,
+  useGenerateInviteCodeMutation,
+} from '../redux/features/group/groupApi';
+import { useAppSelector } from '../redux/hooks';
+import { currentUser } from '../redux/features/auth/authSlice';
+import { ArrowLeft, BookOpen, X } from '../components/CustomIcon';
 import { Avatar } from './ExpensesTab';
 
 interface GroupDetailsScreenProps {
@@ -18,11 +28,80 @@ interface GroupDetailsScreenProps {
 }
 
 export default function GroupDetailsScreen({ onBack }: GroupDetailsScreenProps) {
-  const { data: groupData, isLoading, error } = useGetMyGroupQuery(undefined, {
+  const loggedInUser = useAppSelector(currentUser);
+  const currentUserId = loggedInUser?._id;
+
+  const { data: groupData, isLoading, error, refetch } = useGetMyGroupQuery(undefined, {
     refetchOnMountOrArgChange: true,
   });
 
+  const [leaveGroup, { isLoading: isLeaving }] = useLeaveGroupMutation();
+  const [updateGroup, { isLoading: isUpdatingName }] = useUpdateGroupMutation();
+  const [generateInviteCode, { isLoading: isRegeneratingCode }] = useGenerateInviteCodeMutation();
+
+  const [showEditName, setShowEditName] = useState(false);
+  const [newName, setNewName] = useState('');
+
   const myGroup = groupData?.data;
+
+  const isCreator = myGroup
+    ? myGroup.creator === currentUserId ||
+      (typeof myGroup.creator === 'object' && myGroup.creator?._id === currentUserId)
+    : false;
+
+  const handleLeaveGroup = () => {
+    Alert.alert(
+      'Leave Group',
+      'Are you sure you want to leave this group? You will no longer share expenses or bills with this group.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Leave',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await leaveGroup().unwrap();
+              onBack();
+            } catch (err: any) {
+              Alert.alert('Error', err?.data?.message || err?.message || 'Failed to leave group');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleUpdateName = async () => {
+    if (!newName.trim()) return;
+    try {
+      await updateGroup({ name: newName.trim() }).unwrap();
+      setShowEditName(false);
+      refetch();
+    } catch (err: any) {
+      Alert.alert('Error', err?.data?.message || err?.message || 'Failed to update group name');
+    }
+  };
+
+  const handleRegenerateInviteCode = () => {
+    Alert.alert(
+      'Regenerate Invite Code',
+      'Are you sure you want to generate a new invitation code? The old code will expire instantly.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Generate New Code',
+          onPress: async () => {
+            try {
+              await generateInviteCode().unwrap();
+              refetch();
+            } catch (err: any) {
+              Alert.alert('Error', err?.data?.message || err?.message || 'Failed to generate new code');
+            }
+          },
+        },
+      ]
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -57,11 +136,39 @@ export default function GroupDetailsScreen({ onBack }: GroupDetailsScreenProps) 
 
           {/* Group Basic Info Card */}
           <View style={styles.groupInfoCard}>
-            <Text style={styles.groupModalName}>{myGroup.name}</Text>
+            <View style={styles.groupHeaderRow}>
+              <Text style={styles.groupModalName}>{myGroup.name}</Text>
+              {isCreator && (
+                <TouchableOpacity
+                  onPress={() => {
+                    setNewName(myGroup.name);
+                    setShowEditName(true);
+                  }}
+                  style={styles.editNameBtn}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.editText}>📝 Edit</Text>
+                </TouchableOpacity>
+              )}
+            </View>
             
             <View style={styles.codeContainer}>
               <Text style={styles.codeLabel}>Invite Code:</Text>
               <Text style={styles.codeValue}>{myGroup.inviteCode}</Text>
+              {isCreator && (
+                <TouchableOpacity
+                  onPress={handleRegenerateInviteCode}
+                  style={styles.regenCodeBtn}
+                  activeOpacity={0.7}
+                  disabled={isRegeneratingCode}
+                >
+                  {isRegeneratingCode ? (
+                    <ActivityIndicator size="small" color={COLORS.primary} />
+                  ) : (
+                    <Text style={styles.regenText}>🔄 Refresh</Text>
+                  )}
+                </TouchableOpacity>
+              )}
             </View>
             
             <View style={styles.creatorContainer}>
@@ -99,6 +206,71 @@ export default function GroupDetailsScreen({ onBack }: GroupDetailsScreenProps) 
                 </View>
               ))}
           </View>
+
+          {/* Leave Group Action Button */}
+          <TouchableOpacity
+            onPress={handleLeaveGroup}
+            style={styles.leaveGroupBtn}
+            activeOpacity={0.8}
+            disabled={isLeaving}
+          >
+            {isLeaving ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Text style={styles.leaveGroupText}>🚪 Leave Group</Text>
+            )}
+          </TouchableOpacity>
+
+          {/* Edit Group Name Modal */}
+          <Modal
+            visible={showEditName}
+            transparent={true}
+            animationType="fade"
+            onRequestClose={() => setShowEditName(false)}
+          >
+            <TouchableOpacity
+              style={styles.modalOverlay}
+              onPress={() => setShowEditName(false)}
+              activeOpacity={1}
+            >
+              <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
+                <View style={styles.modalHeader}>
+                  <Text style={styles.modalTitle}>Edit Group Name</Text>
+                  <TouchableOpacity
+                    onPress={() => setShowEditName(false)}
+                    style={styles.modalCloseBtn}
+                    activeOpacity={0.7}
+                  >
+                    <X color={COLORS.textSecondary} size={14} />
+                  </TouchableOpacity>
+                </View>
+
+                <View style={styles.inputWrapper}>
+                  <TextInput
+                    style={styles.textInput}
+                    value={newName}
+                    onChangeText={setNewName}
+                    placeholder="Enter new group name"
+                    placeholderTextColor={COLORS.placeholder}
+                    autoFocus
+                  />
+                </View>
+
+                <TouchableOpacity
+                  onPress={handleUpdateName}
+                  style={styles.saveBtn}
+                  activeOpacity={0.8}
+                  disabled={isUpdatingName || !newName.trim()}
+                >
+                  {isUpdatingName ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Text style={styles.saveBtnText}>Save Changes</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </TouchableOpacity>
+          </Modal>
         </ScrollView>
       )}
     </View>
@@ -263,5 +435,122 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     fontFamily: 'sans-serif',
     marginTop: 2,
+  },
+  groupHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  editNameBtn: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    backgroundColor: 'rgba(232, 160, 32, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(232, 160, 32, 0.3)',
+  },
+  editText: {
+    color: COLORS.primary,
+    fontSize: 12,
+    fontWeight: 'bold',
+    fontFamily: 'sans-serif',
+  },
+  regenCodeBtn: {
+    marginLeft: 'auto',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    backgroundColor: 'rgba(232, 160, 32, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(232, 160, 32, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  regenText: {
+    color: COLORS.primary,
+    fontSize: 12,
+    fontWeight: 'bold',
+    fontFamily: 'sans-serif',
+  },
+  leaveGroupBtn: {
+    height: 50,
+    backgroundColor: '#d4183d',
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 32,
+    marginBottom: 16,
+    ...SHADOWS.md,
+  },
+  leaveGroupText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: 'bold',
+    fontFamily: 'sans-serif',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  modalContent: {
+    backgroundColor: COLORS.surface,
+    borderColor: COLORS.border,
+    borderWidth: 1.2,
+    borderRadius: 16,
+    padding: 20,
+    width: '100%',
+    ...SHADOWS.lg,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: COLORS.text,
+    fontFamily: 'sans-serif',
+  },
+  modalCloseBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: COLORS.surfaceElevated,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  inputWrapper: {
+    height: 52,
+    backgroundColor: COLORS.surfaceElevated,
+    borderWidth: 1.5,
+    borderColor: COLORS.border,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  textInput: {
+    color: COLORS.text,
+    fontSize: 15,
+    fontFamily: 'sans-serif',
+  },
+  saveBtn: {
+    height: 48,
+    backgroundColor: COLORS.primary,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...SHADOWS.md,
+  },
+  saveBtnText: {
+    color: '#1a0e07',
+    fontSize: 14,
+    fontWeight: 'bold',
+    fontFamily: 'sans-serif',
   },
 });
