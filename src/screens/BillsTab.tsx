@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   View,
@@ -10,7 +10,7 @@ import {
 import { COLORS, SPACING, SIZES, SHADOWS } from '../constants/theme';
 import { ChevronRight } from '../components/CustomIcon';
 import { MockUser, Avatar, FilterTabs, fmtFull } from './ExpensesTab';
-import { useGetBillsQuery } from '../redux/features/bill/billApi';
+import { useLazyGetBillsQuery } from '../redux/features/bill/billApi';
 
 export type BillCategory =
   | 'RENT' | 'TRAVEL' | 'WIFI' | 'ELECTRICITY' | 'GAS' | 'WATER'
@@ -147,22 +147,69 @@ interface BillsTabProps {
 
 export default function BillsTab({ bills: propBills, onDetail }: BillsTabProps) {
   const [filter, setFilter] = useState<'month' | 'all'>('month');
+  const [billsList, setBillsList] = useState<MockBill[]>([]);
+  const [page, setPage] = useState(1);
+  const [hasNext, setHasNext] = useState(false);
+  const [totalAmount, setTotalAmount] = useState(0);
+  const [totalItems, setTotalItems] = useState(0);
 
-  // Fetch real bills based on filter setting
-  const { data: billsData, isLoading, isFetching, refetch } = useGetBillsQuery(
-    filter === 'month' ? undefined : { filter: 'ALL' }
-  );
+  const [triggerGetBills, { isFetching, isLoading }] = useLazyGetBillsQuery();
 
-  const billsList = billsData?.data
-    ? billsData.data.map(mapApiToMockBill)
-    : [];
+  const loadData = async (targetPage: number, isRefreshing: boolean = false) => {
+    try {
+      const params: any = {
+        page: targetPage,
+        limit: 15,
+      };
+      if (filter !== 'month') {
+        params.filter = 'ALL';
+      }
 
-  const total = billsList.reduce((s, b) => s + b.amount, 0);
+      const result = await triggerGetBills(params).unwrap();
+      if (result?.success) {
+        const mapped = result.data.map(mapApiToMockBill);
+        if (isRefreshing || targetPage === 1) {
+          setBillsList(mapped);
+        } else {
+          setBillsList((prev) => [...prev, ...mapped]);
+        }
+        setHasNext(result.meta?.hasNext || false);
+        setPage(targetPage);
+        setTotalAmount(result.meta?.totalAmount || 0);
+        setTotalItems(result.meta?.total || 0);
+      }
+    } catch (err) {
+      console.log('Failed to fetch bills:', err);
+    }
+  };
+
+  useEffect(() => {
+    loadData(1, true);
+  }, [filter]);
+
+  const handleRefresh = () => {
+    loadData(1, true);
+  };
+
+  const handleLoadMore = () => {
+    if (hasNext && !isFetching) {
+      loadData(page + 1, false);
+    }
+  };
+
+  const renderFooter = () => {
+    if (!isFetching || page === 1) return null;
+    return (
+      <View style={{ paddingVertical: 20, alignItems: 'center' }}>
+        <ActivityIndicator size="small" color={COLORS.accent} />
+      </View>
+    );
+  };
 
   const now = new Date();
   const currentMonthName = now.toLocaleString('en-US', { month: 'long' });
 
-  if (isLoading) {
+  if (isLoading && page === 1) {
     return (
       <View style={styles.loaderContainer}>
         <ActivityIndicator size="large" color={COLORS.accent} />
@@ -178,7 +225,7 @@ export default function BillsTab({ bills: propBills, onDetail }: BillsTabProps) 
           Group <Text style={{ color: COLORS.accent }}>Bills</Text>
         </Text>
         <Text style={styles.headerSubtitle}>
-          {billsList.length} bills · <Text style={{ color: COLORS.accent, fontWeight: 'bold', fontFamily: 'monospace' }}>{fmtFull(total)}</Text>
+          {totalItems} bills · <Text style={{ color: COLORS.accent, fontWeight: 'bold', fontFamily: 'monospace' }}>{fmtFull(totalAmount || 0)}</Text>
           {filter === 'month' && <Text style={{ color: COLORS.textSecondary }}> in {currentMonthName}</Text>}
         </Text>
       </View>
@@ -194,8 +241,11 @@ export default function BillsTab({ bills: propBills, onDetail }: BillsTabProps) 
           <BillRow bill={item} onClick={() => onDetail(item)} />
         )}
         contentContainerStyle={styles.listContent}
-        refreshing={isFetching}
-        onRefresh={refetch}
+        refreshing={isFetching && page === 1}
+        onRefresh={handleRefresh}
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.3}
+        ListFooterComponent={renderFooter}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyEmoji}>📄</Text>

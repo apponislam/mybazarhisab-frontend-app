@@ -137,6 +137,7 @@ export const billApi = baseApi.injectEndpoints({
 export const {
   useCreateBillMutation,
   useGetBillsQuery,
+  useLazyGetBillsQuery,
   useGetBillStatsQuery,
   useGetBillByIdQuery,
   useUpdateBillMutation,

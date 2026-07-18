@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   View,
@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { COLORS, SPACING, SIZES, SHADOWS } from '../constants/theme';
 import { ChevronRight } from '../components/CustomIcon';
-import { useGetBazarEntriesQuery } from '../redux/features/bazarEntry/bazarEntryApi';
+import { useLazyGetBazarEntriesQuery } from '../redux/features/bazarEntry/bazarEntryApi';
 
 export type BazarUnit = 'KG' | 'PIECE' | 'GM';
 
@@ -233,22 +233,69 @@ interface ExpensesTabProps {
 
 export default function ExpensesTab({ entries: propEntries, onDetail }: ExpensesTabProps) {
   const [filter, setFilter] = useState<'month' | 'all'>('month');
+  const [bazarList, setBazarList] = useState<MockBazarEntry[]>([]);
+  const [page, setPage] = useState(1);
+  const [hasNext, setHasNext] = useState(false);
+  const [totalCost, setTotalCost] = useState(0);
+  const [totalItems, setTotalItems] = useState(0);
 
-  // Fetch real bazar entries from database
-  const { data: bazarEntriesData, isLoading, isFetching, refetch } = useGetBazarEntriesQuery(
-    filter === 'month' ? undefined : { filter: 'ALL' }
-  );
+  const [triggerGetBazarEntries, { isFetching, isLoading }] = useLazyGetBazarEntriesQuery();
 
-  const bazarList = bazarEntriesData?.data
-    ? bazarEntriesData.data.map(mapApiToMockEntry)
-    : [];
+  const loadData = async (targetPage: number, isRefreshing: boolean = false) => {
+    try {
+      const params: any = {
+        page: targetPage,
+        limit: 15,
+      };
+      if (filter !== 'month') {
+        params.filter = 'ALL';
+      }
 
-  const total = bazarList.reduce((s, e) => s + e.price * e.quantity, 0);
+      const result = await triggerGetBazarEntries(params).unwrap();
+      if (result?.success) {
+        const mapped = result.data.map(mapApiToMockEntry);
+        if (isRefreshing || targetPage === 1) {
+          setBazarList(mapped);
+        } else {
+          setBazarList((prev) => [...prev, ...mapped]);
+        }
+        setHasNext(result.meta?.hasNext || false);
+        setPage(targetPage);
+        setTotalCost(result.meta?.totalCost || 0);
+        setTotalItems(result.meta?.total || 0);
+      }
+    } catch (err) {
+      console.log('Failed to fetch bazar entries:', err);
+    }
+  };
+
+  useEffect(() => {
+    loadData(1, true);
+  }, [filter]);
+
+  const handleRefresh = () => {
+    loadData(1, true);
+  };
+
+  const handleLoadMore = () => {
+    if (hasNext && !isFetching) {
+      loadData(page + 1, false);
+    }
+  };
+
+  const renderFooter = () => {
+    if (!isFetching || page === 1) return null;
+    return (
+      <View style={{ paddingVertical: 20, alignItems: 'center' }}>
+        <ActivityIndicator size="small" color={COLORS.primary} />
+      </View>
+    );
+  };
 
   const now = new Date();
   const currentMonthName = now.toLocaleString('en-US', { month: 'long' });
 
-  if (isLoading) {
+  if (isLoading && page === 1) {
     return (
       <View style={styles.loaderContainer}>
         <ActivityIndicator size="large" color={COLORS.primary} />
@@ -264,7 +311,7 @@ export default function ExpensesTab({ entries: propEntries, onDetail }: Expenses
           Bazar <Text style={{ color: COLORS.primary }}>Expenses</Text>
         </Text>
         <Text style={styles.headerSubtitle}>
-          {bazarList.length} entries · <Text style={{ color: COLORS.primary, fontWeight: 'bold', fontFamily: 'monospace' }}>{fmtFull(total)}</Text>
+          {totalItems} entries · <Text style={{ color: COLORS.primary, fontWeight: 'bold', fontFamily: 'monospace' }}>{fmtFull(totalCost || 0)}</Text>
           {filter === 'month' && <Text style={{ color: COLORS.textSecondary }}> in {currentMonthName}</Text>}
         </Text>
       </View>
@@ -280,8 +327,11 @@ export default function ExpensesTab({ entries: propEntries, onDetail }: Expenses
           <ExpenseRow entry={item} onClick={() => onDetail(item)} />
         )}
         contentContainerStyle={styles.listContent}
-        refreshing={isFetching}
-        onRefresh={refetch}
+        refreshing={isFetching && page === 1}
+        onRefresh={handleRefresh}
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.3}
+        ListFooterComponent={renderFooter}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyEmoji}>🛒</Text>

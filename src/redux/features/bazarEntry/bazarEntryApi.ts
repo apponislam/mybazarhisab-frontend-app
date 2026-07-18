@@ -146,6 +146,7 @@ export const bazarEntryApi = baseApi.injectEndpoints({
 export const {
   useCreateBazarEntryMutation,
   useGetBazarEntriesQuery,
+  useLazyGetBazarEntriesQuery,
   useGetBazarEntryStatsQuery,
   useGetBazarEntryByIdQuery,
   useUpdateBazarEntryMutation,
