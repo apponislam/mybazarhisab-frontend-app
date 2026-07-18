@@ -76,6 +76,7 @@ interface BillResponse {
 }
 
 export const billApi = baseApi.injectEndpoints({
+  overrideExisting: true,
   endpoints: (builder) => ({
     createBill: builder.mutation<BillResponse, CreateBillPayload>({
       query: (body) => ({

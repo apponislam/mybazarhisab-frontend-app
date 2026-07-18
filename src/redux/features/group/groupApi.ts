@@ -29,6 +29,7 @@ export type TGroupDetails = {
 };
 
 export const groupApi = baseApi.injectEndpoints({
+  overrideExisting: true,
   endpoints: (builder) => ({
     checkGroup: builder.query<{ success: boolean; message: string; data: boolean }, void>({
       query: () => ({

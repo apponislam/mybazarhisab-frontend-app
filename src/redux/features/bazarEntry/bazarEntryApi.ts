@@ -85,6 +85,7 @@ interface BazarEntryResponse {
 }
 
 export const bazarEntryApi = baseApi.injectEndpoints({
+  overrideExisting: true,
   endpoints: (builder) => ({
     createBazarEntry: builder.mutation<BazarEntryResponse, CreateBazarEntryPayload>({
       query: (body) => ({

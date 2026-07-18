@@ -31,6 +31,7 @@ interface ProductSearchParams {
 }
 
 export const productApi = baseApi.injectEndpoints({
+  overrideExisting: true,
   endpoints: (builder) => ({
     searchProducts: builder.query<ProductSearchResponse, ProductSearchParams>({
       query: ({ searchTerm, page = 1, limit = 10 }) => {

@@ -8,6 +8,7 @@ interface UserDashboardStatsResponse {
 }
 
 export const dashboardApi = baseApi.injectEndpoints({
+  overrideExisting: true,
   endpoints: (builder) => ({
     getUserDashboardStats: builder.query<UserDashboardStatsResponse, void>({
       query: () => ({
