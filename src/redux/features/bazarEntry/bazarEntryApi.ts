@@ -141,6 +141,7 @@ export const {
   useGetBazarEntriesQuery,
   useLazyGetBazarEntriesQuery,
   useGetBazarEntryStatsQuery,
+  useLazyGetBazarEntryStatsQuery,
   useGetBazarEntryByIdQuery,
   useUpdateBazarEntryMutation,
   useDeleteBazarEntryMutation,

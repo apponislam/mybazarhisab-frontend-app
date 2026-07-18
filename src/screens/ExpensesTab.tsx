@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { COLORS, SPACING, SIZES, SHADOWS } from '../constants/theme';
 import { ChevronRight } from '../components/CustomIcon';
-import { useLazyGetBazarEntriesQuery } from '../redux/features/bazarEntry/bazarEntryApi';
+import { useLazyGetBazarEntriesQuery, useLazyGetBazarEntryStatsQuery } from '../redux/features/bazarEntry/bazarEntryApi';
 
 export type BazarUnit = 'KG' | 'PIECE' | 'GM';
 
@@ -240,6 +240,7 @@ export default function ExpensesTab({ entries: propEntries, onDetail }: Expenses
   const [totalItems, setTotalItems] = useState(0);
 
   const [triggerGetBazarEntries, { isFetching, isLoading }] = useLazyGetBazarEntriesQuery();
+  const [triggerGetStats] = useLazyGetBazarEntryStatsQuery();
 
   const loadData = async (targetPage: number, isRefreshing: boolean = false) => {
     try {
@@ -261,8 +262,23 @@ export default function ExpensesTab({ entries: propEntries, onDetail }: Expenses
         }
         setHasNext(result.meta?.hasNext || false);
         setPage(targetPage);
-        setTotalCost(result.meta?.totalCost || 0);
-        setTotalItems(result.meta?.total || 0);
+      }
+
+      // Fetch stats (totalEntries + totalAmount) from the dedicated stats endpoint
+      if (targetPage === 1) {
+        const statsParams: any = {};
+        if (filter !== 'month') {
+          statsParams.filter = 'ALL';
+        }
+        try {
+          const statsResult = await triggerGetStats(statsParams).unwrap();
+          if (statsResult?.success) {
+            setTotalCost(statsResult.data.totalAmount || 0);
+            setTotalItems(statsResult.data.totalEntries || 0);
+          }
+        } catch (statsErr) {
+          console.log('Failed to fetch bazar stats:', statsErr);
+        }
       }
     } catch (err) {
       console.log('Failed to fetch bazar entries:', err);

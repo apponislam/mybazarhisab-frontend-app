@@ -33,7 +33,7 @@ import {
 } from '../components/CustomIcon';
 import { MockUser, Avatar, FilterTabs, fmtFull } from './ExpensesTab';
 import MetaInfo from '../components/MetaInfo';
-import { useLazyGetBillsQuery } from '../redux/features/bill/billApi';
+import { useLazyGetBillsQuery, useLazyGetBillStatsQuery } from '../redux/features/bill/billApi';
 
 
 export type BillCategory =
@@ -318,6 +318,7 @@ export default function BillsTab({
   const [totalItems, setTotalItems] = useState(0);
 
   const [triggerGetBills, { isFetching, isLoading }] = useLazyGetBillsQuery();
+  const [triggerGetBillStats] = useLazyGetBillStatsQuery();
 
   const loadData = async (
     targetPage: number,
@@ -342,8 +343,23 @@ export default function BillsTab({
         }
         setHasNext(result.meta?.hasNext || false);
         setPage(targetPage);
-        setTotalAmount(result.meta?.totalAmount || 0);
-        setTotalItems(result.meta?.total || 0);
+      }
+
+      // Fetch stats (totalEntries + totalAmount) from the dedicated stats endpoint
+      if (targetPage === 1) {
+        const statsParams: any = {};
+        if (filter !== 'month') {
+          statsParams.filter = 'ALL';
+        }
+        try {
+          const statsResult = await triggerGetBillStats(statsParams).unwrap();
+          if (statsResult?.success) {
+            setTotalAmount(statsResult.data.totalAmount || 0);
+            setTotalItems(statsResult.data.totalEntries || 0);
+          }
+        } catch (statsErr) {
+          console.log('Failed to fetch bill stats:', statsErr);
+        }
       }
     } catch (err) {
       console.log('Failed to fetch bills:', err);

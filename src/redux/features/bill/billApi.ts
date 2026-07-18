@@ -132,6 +132,7 @@ export const {
   useGetBillsQuery,
   useLazyGetBillsQuery,
   useGetBillStatsQuery,
+  useLazyGetBillStatsQuery,
   useGetBillByIdQuery,
   useUpdateBillMutation,
   useDeleteBillMutation,
