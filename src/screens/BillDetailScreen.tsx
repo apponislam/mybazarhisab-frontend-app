@@ -58,7 +58,7 @@ export default function BillDetailScreen({
             style={styles.deleteBtn}
             activeOpacity={0.7}
           >
-            <Text style={styles.deleteBtnText}>🗑️</Text>
+            <Text style={styles.deleteBtnText}>Delete</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -75,7 +75,9 @@ export default function BillDetailScreen({
             SHADOWS.lg,
           ]}
         >
-          <Text style={styles.heroEmoji}>{meta.emoji}</Text>
+          <View style={{ marginBottom: 12 }}>
+            {meta.icon({ color: meta.color, size: 48 })}
+          </View>
           <Text style={styles.heroTitle}>{bill.title}</Text>
           <Text style={[styles.heroAmount, { color: meta.color }]}>
             {fmtFull(bill.amount)}
@@ -181,8 +183,8 @@ const styles = StyleSheet.create({
     fontFamily: 'sans-serif',
   },
   deleteBtn: {
-    width: 32,
-    height: 32,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: 'rgba(212, 24, 61, 0.4)',
@@ -191,7 +193,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   deleteBtnText: {
-    fontSize: 14,
+    color: '#d4183d',
+    fontSize: 13,
+    fontWeight: 'bold',
+    fontFamily: 'sans-serif',
   },
   scrollContent: {
     paddingHorizontal: 24,

@@ -8,7 +8,29 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { COLORS, SPACING, SIZES, SHADOWS } from '../constants/theme';
-import { ChevronRight } from '../components/CustomIcon';
+import {
+  ChevronRight,
+  Home,
+  Car,
+  Wifi,
+  Zap,
+  Flame,
+  Droplet,
+  Sparkles,
+  Wrench,
+  CreditCard,
+  Phone,
+  Heart,
+  GraduationCap,
+  ShoppingBag,
+  Tv,
+  Shirt,
+  TrendingUp,
+  Scissors,
+  Gift,
+  Settings,
+  MessageSquare,
+} from '../components/CustomIcon';
 import { MockUser, Avatar, FilterTabs, fmtFull } from './ExpensesTab';
 import { useLazyGetBillsQuery } from '../redux/features/bill/billApi';
 
@@ -28,27 +50,27 @@ export interface MockBill {
   notes?: string;
 }
 
-export const BILL_META: Record<BillCategory, { label: string; emoji: string; color: string }> = {
-  RENT:           { label: 'Rent',         emoji: '🏠', color: '#e8a020' },
-  TRAVEL:         { label: 'Travel',       emoji: '🚗', color: '#3b82f6' },
-  WIFI:           { label: 'Wi-Fi',        emoji: '📶', color: '#06b6d4' },
-  ELECTRICITY:    { label: 'Electricity',  emoji: '⚡', color: '#f59e0b' },
-  GAS:            { label: 'Gas',          emoji: '🔥', color: '#f97316' },
-  WATER:          { label: 'Water',        emoji: '💧', color: '#60a5fa' },
-  MAID:           { label: 'Maid',         emoji: '✨', color: '#a78bfa' },
-  MAINTENANCE:    { label: 'Maintenance',  emoji: '🔧', color: '#78716c' },
-  SUBSCRIPTION:   { label: 'Subscription', emoji: '💳', color: '#ec4899' },
-  MOBILE:         { label: 'Mobile',       emoji: '📱', color: '#34d399' },
-  MEDICAL:        { label: 'Medical',      emoji: '❤️', color: '#f43f5e' },
-  EDUCATION:      { label: 'Education',    emoji: '🎓', color: '#8b5cf6' },
-  SHOPPING:       { label: 'Shopping',     emoji: '🛍️', color: '#c06010' },
-  ENTERTAINMENT:  { label: 'Entertainment',emoji: '📺', color: '#6366f1' },
-  LAUNDRY:        { label: 'Laundry',      emoji: '👕', color: '#14b8a6' },
-  LOAN_EMI:       { label: 'Loan / EMI',   emoji: '💵', color: '#ef4444' },
-  SALON_GROOMING: { label: 'Salon',        emoji: '✂️', color: '#d946ef' },
-  GIFTS_FESTIVALS:{ label: 'Gifts',        emoji: '🎁', color: '#f59e0b' },
-  UTILITIES:      { label: 'Utilities',    emoji: '⚙️', color: '#94a3b8' },
-  OTHERS:         { label: 'Others',       emoji: '💬', color: '#64748b' },
+export const BILL_META: Record<BillCategory, { label: string; icon: (props: any) => React.ReactNode; color: string; emoji: string }> = {
+  RENT:           { label: 'Rent',         icon: (p) => <Home {...p} />,           color: '#e8a020', emoji: '🏠' },
+  TRAVEL:         { label: 'Travel',       icon: (p) => <Car {...p} />,           color: '#3b82f6', emoji: '🚗' },
+  WIFI:           { label: 'Wi-Fi',        icon: (p) => <Wifi {...p} />,          color: '#06b6d4', emoji: '📶' },
+  ELECTRICITY:    { label: 'Electricity',  icon: (p) => <Zap {...p} />,           color: '#f59e0b', emoji: '⚡' },
+  GAS:            { label: 'Gas',          icon: (p) => <Flame {...p} />,          color: '#f97316', emoji: '🔥' },
+  WATER:          { label: 'Water',        icon: (p) => <Droplet {...p} />,        color: '#60a5fa', emoji: '💧' },
+  MAID:           { label: 'Maid',         icon: (p) => <Sparkles {...p} />,       color: '#a78bfa', emoji: '✨' },
+  MAINTENANCE:    { label: 'Maintenance',  icon: (p) => <Wrench {...p} />,         color: '#78716c', emoji: '🔧' },
+  SUBSCRIPTION:   { label: 'Subscription', icon: (p) => <CreditCard {...p} />,     color: '#ec4899', emoji: '💳' },
+  MOBILE:         { label: 'Mobile',       icon: (p) => <Phone {...p} />,          color: '#34d399', emoji: '📱' },
+  MEDICAL:        { label: 'Medical',      icon: (p) => <Heart {...p} />,          color: '#f43f5e', emoji: '❤️' },
+  EDUCATION:      { label: 'Education',    icon: (p) => <GraduationCap {...p} />,   color: '#8b5cf6', emoji: '🎓' },
+  SHOPPING:       { label: 'Shopping',     icon: (p) => <ShoppingBag {...p} />,     color: '#c06010', emoji: '🛍️' },
+  ENTERTAINMENT:  { label: 'Entertainment',icon: (p) => <Tv {...p} />,             color: '#6366f1', emoji: '📺' },
+  LAUNDRY:        { label: 'Laundry',      icon: (p) => <Shirt {...p} />,          color: '#14b8a6', emoji: '👕' },
+  LOAN_EMI:       { label: 'Loan / EMI',   icon: (p) => <TrendingUp {...p} />,     color: '#ef4444', emoji: '💵' },
+  SALON_GROOMING: { label: 'Salon',        icon: (p) => <Scissors {...p} />,       color: '#d946ef', emoji: '✂️' },
+  GIFTS_FESTIVALS:{ label: 'Gifts',        icon: (p) => <Gift {...p} />,           color: '#f59e0b', emoji: '🎁' },
+  UTILITIES:      { label: 'Utilities',    icon: (p) => <Settings {...p} />,       color: '#94a3b8', emoji: '⚙️' },
+  OTHERS:         { label: 'Others',       icon: (p) => <MessageSquare {...p} />,  color: '#64748b', emoji: '💬' },
 };
 
 export const BILL_CATEGORIES = Object.entries(BILL_META).map(([k, v]) => ({
@@ -113,7 +135,7 @@ export function BillRow({ bill, onClick }: BillRowProps) {
           },
         ]}
       >
-        <Text style={styles.iconText}>{meta.emoji}</Text>
+        {meta.icon({ color: meta.color, size: 22 })}
       </View>
 
       <View style={styles.centerInfo}>

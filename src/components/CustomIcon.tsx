@@ -612,3 +612,220 @@ export function Receipt({ color = '#e8a020', size = 20, style }: IconProps) {
     </View>
   );
 }
+
+export function Car({ color = '#e8a020', size = 20, style }: IconProps) {
+  return (
+    <View style={[{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }, style]}>
+      <View style={{ width: size * 0.7, height: size * 0.35, borderWidth: 1.5, borderColor: color, borderTopLeftRadius: size * 0.15, borderTopRightRadius: size * 0.15, position: 'absolute', top: size * 0.18 }} />
+      <View style={{ width: size * 0.82, height: size * 0.3, borderWidth: 1.5, borderColor: color, borderRadius: 2.5, position: 'absolute', bottom: size * 0.18 }} />
+      <View style={{ width: size * 0.16, height: size * 0.16, borderRadius: size * 0.08, backgroundColor: color, position: 'absolute', bottom: size * 0.1, left: size * 0.18 }} />
+      <View style={{ width: size * 0.16, height: size * 0.16, borderRadius: size * 0.08, backgroundColor: color, position: 'absolute', bottom: size * 0.1, right: size * 0.18 }} />
+    </View>
+  );
+}
+
+export function Wifi({ color = '#e8a020', size = 20, style }: IconProps) {
+  return (
+    <View style={[{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }, style]}>
+      {/* Outer arc */}
+      <View style={{ width: size * 0.8, height: size * 0.8, borderWidth: 1.5, borderColor: color, borderTopLeftRadius: size * 0.4, borderTopRightRadius: size * 0.4, borderBottomWidth: 0, borderRightWidth: 0, borderLeftWidth: 0, transform: [{ rotate: '45deg' }], position: 'absolute', top: size * 0.1 }} />
+      {/* Middle arc */}
+      <View style={{ width: size * 0.5, height: size * 0.5, borderWidth: 1.5, borderColor: color, borderTopLeftRadius: size * 0.25, borderTopRightRadius: size * 0.25, borderBottomWidth: 0, borderRightWidth: 0, borderLeftWidth: 0, transform: [{ rotate: '45deg' }], position: 'absolute', top: size * 0.25 }} />
+      {/* Inner dot */}
+      <View style={{ width: size * 0.14, height: size * 0.14, borderRadius: size * 0.07, backgroundColor: color, position: 'absolute', bottom: size * 0.15 }} />
+    </View>
+  );
+}
+
+export function Zap({ color = '#e8a020', size = 20, style }: IconProps) {
+  return (
+    <View style={[{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }, style]}>
+      {/* Zig-Zag lightning bolt */}
+      <View style={{ width: size * 0.35, height: size * 0.35, borderRightWidth: 2, borderBottomWidth: 2, borderColor: color, transform: [{ skewX: '-25deg' }, { rotate: '-10deg' }], position: 'absolute', top: size * 0.15 }} />
+      <View style={{ width: size * 0.35, height: size * 0.35, borderLeftWidth: 2, borderTopWidth: 2, borderColor: color, transform: [{ skewX: '-25deg' }, { rotate: '-10deg' }], position: 'absolute', bottom: size * 0.15 }} />
+    </View>
+  );
+}
+
+export function Flame({ color = '#e8a020', size = 20, style }: IconProps) {
+  return (
+    <View style={[{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }, style]}>
+      <View style={{
+        width: size * 0.55,
+        height: size * 0.75,
+        borderWidth: 1.5,
+        borderColor: color,
+        borderTopLeftRadius: size * 0.3,
+        borderBottomLeftRadius: size * 0.25,
+        borderBottomRightRadius: size * 0.25,
+        borderTopRightRadius: size * 0.05,
+        transform: [{ rotate: '-45deg' }],
+      }} />
+    </View>
+  );
+}
+
+export function Droplet({ color = '#e8a020', size = 20, style }: IconProps) {
+  return (
+    <View style={[{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }, style]}>
+      <View style={{
+        width: size * 0.55,
+        height: size * 0.55,
+        borderWidth: 1.5,
+        borderColor: color,
+        borderTopLeftRadius: size * 0.27,
+        borderBottomLeftRadius: size * 0.27,
+        borderBottomRightRadius: size * 0.27,
+        transform: [{ rotate: '-45deg' }],
+        marginTop: size * 0.15,
+      }} />
+    </View>
+  );
+}
+
+export function Sparkles({ color = '#e8a020', size = 20, style }: IconProps) {
+  return (
+    <View style={[{ width: size, height: size }, style]}>
+      {/* Star 1 */}
+      <View style={{ position: 'absolute', top: size * 0.1, left: size * 0.1 }}>
+        <View style={{ width: size * 0.35, height: 1.2, backgroundColor: color, position: 'absolute', top: size * 0.17 }} />
+        <View style={{ width: 1.2, height: size * 0.35, backgroundColor: color, position: 'absolute', left: size * 0.17 }} />
+      </View>
+      {/* Star 2 */}
+      <View style={{ position: 'absolute', bottom: size * 0.15, right: size * 0.15 }}>
+        <View style={{ width: size * 0.25, height: 1, backgroundColor: color, position: 'absolute', top: size * 0.12 }} />
+        <View style={{ width: 1, height: size * 0.25, backgroundColor: color, position: 'absolute', left: size * 0.12 }} />
+      </View>
+    </View>
+  );
+}
+
+export function Wrench({ color = '#e8a020', size = 20, style }: IconProps) {
+  return (
+    <View style={[{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }, style]}>
+      {/* Shaft */}
+      <View style={{ width: size * 0.65, height: size * 0.15, backgroundColor: color, borderRadius: 2, transform: [{ rotate: '-45deg' }] }} />
+      {/* Left head */}
+      <View style={{ width: size * 0.3, height: size * 0.3, borderRadius: size * 0.15, borderWidth: 1.5, borderColor: color, position: 'absolute', top: size * 0.15, left: size * 0.15, backgroundColor: '#1a0e07' }} />
+      {/* Right head */}
+      <View style={{ width: size * 0.3, height: size * 0.3, borderRadius: size * 0.15, borderWidth: 1.5, borderColor: color, position: 'absolute', bottom: size * 0.15, right: size * 0.15, backgroundColor: '#1a0e07' }} />
+    </View>
+  );
+}
+
+export function CreditCard({ color = '#e8a020', size = 20, style }: IconProps) {
+  return (
+    <View style={[{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }, style]}>
+      <View style={{ width: size * 0.8, height: size * 0.56, borderWidth: 1.5, borderColor: color, borderRadius: 3, paddingVertical: size * 0.08 }}>
+        <View style={{ width: '100%', height: 2.2, backgroundColor: color, marginTop: size * 0.04 }} />
+        <View style={{ width: size * 0.16, height: size * 0.08, backgroundColor: color, marginLeft: size * 0.08, marginTop: size * 0.08, borderRadius: 0.5 }} />
+      </View>
+    </View>
+  );
+}
+
+export function Heart({ color = '#e8a020', size = 20, style }: IconProps) {
+  const arcSize = size * 0.38;
+  return (
+    <View style={[{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }, style]}>
+      <View style={{ flexDirection: 'row', position: 'absolute', top: size * 0.15 }}>
+        <View style={{ width: arcSize, height: arcSize, borderTopLeftRadius: arcSize / 2, borderTopRightRadius: arcSize / 2, borderWidth: 1.5, borderColor: color, borderBottomWidth: 0 }} />
+        <View style={{ width: arcSize, height: arcSize, borderTopLeftRadius: arcSize / 2, borderTopRightRadius: arcSize / 2, borderWidth: 1.5, borderColor: color, borderBottomWidth: 0, marginLeft: -1.5 }} />
+      </View>
+      <View style={{ width: size * 0.52, height: size * 0.52, borderWidth: 1.5, borderColor: color, borderTopWidth: 0, borderRightWidth: 0, transform: [{ rotate: '-45deg' }], position: 'absolute', bottom: size * 0.16 }} />
+    </View>
+  );
+}
+
+export function GraduationCap({ color = '#e8a020', size = 20, style }: IconProps) {
+  return (
+    <View style={[{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }, style]}>
+      {/* Cap diamond */}
+      <View style={{ width: size * 0.72, height: size * 0.32, borderWidth: 1.5, borderColor: color, transform: [{ rotate: '25deg' }, { skewX: '-35deg' }], position: 'absolute', top: size * 0.18 }} />
+      {/* Base neck */}
+      <View style={{ width: size * 0.42, height: size * 0.18, borderWidth: 1.5, borderColor: color, borderTopWidth: 0, borderBottomLeftRadius: size * 0.08, borderBottomRightRadius: size * 0.08, position: 'absolute', bottom: size * 0.2 }} />
+      {/* Tassel line */}
+      <View style={{ width: 1, height: size * 0.22, backgroundColor: color, position: 'absolute', right: size * 0.18, bottom: size * 0.25 }} />
+    </View>
+  );
+}
+
+export function Tv({ color = '#e8a020', size = 20, style }: IconProps) {
+  return (
+    <View style={[{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }, style]}>
+      {/* Screen */}
+      <View style={{ width: size * 0.8, height: size * 0.55, borderWidth: 1.5, borderColor: color, borderRadius: 2.5, justifyContent: 'center', alignItems: 'center' }}>
+        <View style={{ width: size * 0.08, height: size * 0.08, borderRadius: size * 0.04, backgroundColor: color, position: 'absolute', right: size * 0.06 }} />
+      </View>
+      {/* Stand base */}
+      <View style={{ width: size * 0.32, height: 1.5, backgroundColor: color, position: 'absolute', bottom: size * 0.15 }} />
+      <View style={{ width: 1.5, height: size * 0.1, backgroundColor: color, position: 'absolute', bottom: size * 0.15 }} />
+    </View>
+  );
+}
+
+export function Shirt({ color = '#e8a020', size = 20, style }: IconProps) {
+  return (
+    <View style={[{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }, style]}>
+      {/* Body & sleeves */}
+      <View style={{ width: size * 0.72, height: size * 0.65, borderWidth: 1.5, borderColor: color, borderTopLeftRadius: size * 0.1, borderTopRightRadius: size * 0.1, borderBottomLeftRadius: 2, borderBottomRightRadius: 2, position: 'absolute', bottom: size * 0.15 }} />
+      {/* Collar cut-out */}
+      <View style={{ width: size * 0.26, height: size * 0.15, borderWidth: 1.5, borderColor: color, borderTopWidth: 0, borderBottomLeftRadius: size * 0.1, borderBottomRightRadius: size * 0.1, position: 'absolute', top: size * 0.18 }} />
+    </View>
+  );
+}
+
+export function Scissors({ color = '#e8a020', size = 20, style }: IconProps) {
+  return (
+    <View style={[{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }, style]}>
+      {/* Blades */}
+      <View style={{ width: 1.5, height: size * 0.5, backgroundColor: color, position: 'absolute', top: size * 0.12, left: size * 0.42, transform: [{ rotate: '20deg' }] }} />
+      <View style={{ width: 1.5, height: size * 0.5, backgroundColor: color, position: 'absolute', top: size * 0.12, right: size * 0.42, transform: [{ rotate: '-20deg' }] }} />
+      {/* Loops */}
+      <View style={{ width: size * 0.24, height: size * 0.24, borderRadius: size * 0.12, borderWidth: 1.5, borderColor: color, position: 'absolute', bottom: size * 0.15, left: size * 0.22 }} />
+      <View style={{ width: size * 0.24, height: size * 0.24, borderRadius: size * 0.12, borderWidth: 1.5, borderColor: color, position: 'absolute', bottom: size * 0.15, right: size * 0.22 }} />
+    </View>
+  );
+}
+
+export function Gift({ color = '#e8a020', size = 20, style }: IconProps) {
+  return (
+    <View style={[{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }, style]}>
+      {/* Box */}
+      <View style={{ width: size * 0.68, height: size * 0.56, borderWidth: 1.5, borderColor: color, borderRadius: 2, paddingVertical: 1 }}>
+        {/* Ribbon cross */}
+        <View style={{ width: '100%', height: 1.5, backgroundColor: color, position: 'absolute', top: size * 0.26 }} />
+        <View style={{ height: '100%', width: 1.5, backgroundColor: color, position: 'absolute', left: size * 0.31 }} />
+      </View>
+      {/* Ribbon bow loop left */}
+      <View style={{ width: size * 0.2, height: size * 0.16, borderWidth: 1.2, borderColor: color, borderRadius: size * 0.08, position: 'absolute', top: size * 0.1, left: size * 0.3, transform: [{ rotate: '-35deg' }] }} />
+      {/* Ribbon bow loop right */}
+      <View style={{ width: size * 0.2, height: size * 0.16, borderWidth: 1.2, borderColor: color, borderRadius: size * 0.08, position: 'absolute', top: size * 0.1, right: size * 0.3, transform: [{ rotate: '35deg' }] }} />
+    </View>
+  );
+}
+
+export function Settings({ color = '#e8a020', size = 20, style }: IconProps) {
+  return (
+    <View style={[{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }, style]}>
+      <View style={{ width: size * 0.72, height: size * 0.72, borderRadius: size * 0.36, borderWidth: 1.5, borderColor: color, justifyContent: 'center', alignItems: 'center' }}>
+        <View style={{ width: size * 0.22, height: size * 0.22, borderRadius: size * 0.11, borderWidth: 1.5, borderColor: color }} />
+      </View>
+      {/* Cog spokes */}
+      {[0, 45, 90, 135].map((angle, idx) => (
+        <View key={idx} style={{ width: size * 0.85, height: 1.5, backgroundColor: color, position: 'absolute', transform: [{ rotate: `${angle}deg` }] }} />
+      ))}
+    </View>
+  );
+}
+
+export function MessageSquare({ color = '#e8a020', size = 20, style }: IconProps) {
+  return (
+    <View style={[{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }, style]}>
+      <View style={{ width: size * 0.76, height: size * 0.58, borderWidth: 1.5, borderColor: color, borderRadius: 2 }}>
+        {/* Balloon pointer tail */}
+        <View style={{ width: size * 0.15, height: size * 0.15, borderBottomWidth: 1.5, borderLeftWidth: 1.5, borderColor: color, transform: [{ rotate: '45deg' }], position: 'absolute', bottom: -size * 0.08, left: size * 0.15, backgroundColor: '#1a0e07' }} />
+      </View>
+    </View>
+  );
+}

@@ -85,7 +85,7 @@ export default function BillEditScreen({
         {/* Header */}
         <View style={styles.screenHeader}>
           <View style={[styles.iconCircleHeader, { backgroundColor: `${activeMeta.color}20`, borderColor: `${activeMeta.color}40` }]}>
-            <Text style={styles.headerEmoji}>{activeMeta.emoji}</Text>
+            {activeMeta.icon({ color: activeMeta.color, size: 20 })}
           </View>
           <View>
             <Text style={styles.screenTitle}>Edit Bill</Text>
@@ -111,7 +111,7 @@ export default function BillEditScreen({
                   },
                 ]}
               >
-                <Text style={styles.categoryEmoji}>{activeMeta.emoji}</Text>
+                {activeMeta.icon({ color: activeMeta.color, size: 20 })}
               </View>
               <Text style={styles.categoryLabelText}>{activeMeta.label}</Text>
               <Text style={styles.categorySelectorChevron}>▼</Text>
@@ -239,7 +239,7 @@ export default function BillEditScreen({
                       },
                     ]}
                   >
-                    <Text style={styles.gridEmoji}>{c.emoji}</Text>
+                    {c.icon({ color: c.color, size: 20 })}
                   </View>
                   <Text style={styles.gridLabelText} numberOfLines={1}>
                     {c.label}

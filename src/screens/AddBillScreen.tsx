@@ -166,7 +166,7 @@ export default function AddBillScreen({ onBack, onDone }: AddBillScreenProps) {
                   },
                 ]}
               >
-                <Text style={styles.categoryEmoji}>{activeMeta.emoji}</Text>
+                {activeMeta.icon({ color: activeMeta.color, size: 20 })}
               </View>
               <Text style={styles.categoryLabelText}>{activeMeta.label}</Text>
               <Text style={styles.categorySelectorChevron}>▼</Text>
@@ -316,7 +316,7 @@ export default function AddBillScreen({ onBack, onDone }: AddBillScreenProps) {
                       },
                     ]}
                   >
-                    <Text style={styles.gridEmoji}>{c.emoji}</Text>
+                    {c.icon({ color: c.color, size: 20 })}
                   </View>
                   <Text style={styles.gridLabelText} numberOfLines={1}>
                     {c.label}
