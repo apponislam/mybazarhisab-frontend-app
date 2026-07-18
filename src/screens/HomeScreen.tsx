@@ -174,6 +174,14 @@ export default function HomeScreen() {
   const [selectedEntry, setSelectedEntry] = useState<MockBazarEntry | null>(null);
   const [selectedBill, setSelectedBill] = useState<MockBill | null>(null);
 
+  // Navigation history stack to track active tabs and subscreen navigation history
+  const [navHistory, setNavHistory] = useState<{
+    tab: AppTabType;
+    subScreen: AppSubScreenType;
+    selectedEntry: MockBazarEntry | null;
+    selectedBill: MockBill | null;
+  }[]>([{ tab: 'home', subScreen: null, selectedEntry: null, selectedBill: null }]);
+
   const loggedInUser = useAppSelector(currentUser);
   const myUserId = loggedInUser?._id || 'u1';
 
@@ -248,41 +256,68 @@ export default function HomeScreen() {
     }
   }, [userHasGroup, myGroupData, entries, statsData, dashboardData]);
 
+  // Synchronize navigation history stack when tab, subScreen, selectedEntry, or selectedBill change
+  useEffect(() => {
+    setNavHistory((prev) => {
+      const current = prev[prev.length - 1];
+
+      // Detect if this matches the second-to-last item (meaning a Back navigation Pop occurred)
+      if (prev.length > 1) {
+        const penult = prev[prev.length - 2];
+        if (
+          penult.tab === tab &&
+          penult.subScreen === subScreen &&
+          penult.selectedEntry?.id === selectedEntry?.id &&
+          penult.selectedBill?.id === selectedBill?.id
+        ) {
+          // It's a pop! Return the popped history array
+          return prev.slice(0, -1);
+        }
+      }
+
+      // If it matches current top of stack exactly, do not duplicate
+      if (
+        current &&
+        current.tab === tab &&
+        current.subScreen === subScreen &&
+        current.selectedEntry?.id === selectedEntry?.id &&
+        current.selectedBill?.id === selectedBill?.id
+      ) {
+        return prev;
+      }
+
+      // Otherwise it's a new push navigation state
+      return [...prev, { tab, subScreen, selectedEntry, selectedBill }];
+    });
+  }, [tab, subScreen, selectedEntry, selectedBill]);
+
   useEffect(() => {
     const handleBackPress = () => {
-      // 1. If add picker popup is visible, close it
+      // 1. If add picker overlay is active, dismiss it first
       if (showAddPicker) {
         setShowAddPicker(false);
         return true;
       }
 
-      // 2. If sub screen is active, go back/dismiss
-      if (subScreen !== null) {
-        if (subScreen === 'expense-edit') {
-          setSubScreen('expense-detail');
-          return true;
-        }
-        if (subScreen === 'bill-edit') {
-          setSubScreen('bill-detail');
-          return true;
-        }
-        setSubScreen(null);
+      // 2. If we have a navigation history stack, go back to previous screen
+      if (navHistory.length > 1) {
+        const penult = navHistory[navHistory.length - 2];
+        
+        // This triggers the useEffect above to pop correctly
+        setTab(penult.tab);
+        setSubScreen(penult.subScreen);
+        setSelectedEntry(penult.selectedEntry);
+        setSelectedBill(penult.selectedBill);
         return true;
       }
 
-      // 3. If on any tab other than Home, navigate to Home tab
-      if (tab !== 'home') {
-        setTab('home');
-        return true;
-      }
-
-      // 4. Otherwise exit the app
+      // 3. Else exit the app
       return false;
     };
 
     const subscription = BackHandler.addEventListener('hardwareBackPress', handleBackPress);
     return () => subscription.remove();
-  }, [subScreen, showAddPicker, tab]);
+  }, [navHistory, showAddPicker]);
 
   // If loading or checking membership
   if (userHasGroup === null || isChecking || (userHasGroup === true && isFetchingGroup && !groupStats)) {

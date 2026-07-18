@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   View,
@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Modal,
   Platform,
+  BackHandler,
 } from 'react-native';
 import { COLORS, SPACING, SIZES, SHADOWS } from '../constants/theme';
 import { ArrowLeft, X, Plus, Calendar } from '../components/CustomIcon';
@@ -61,6 +62,18 @@ export default function AddBillScreen({ onBack, onDone }: AddBillScreenProps) {
 
   // RTK Query hook
   const [createBill, { isLoading: isCreating }] = useCreateBillMutation();
+
+  useEffect(() => {
+    const handleBack = () => {
+      if (showCatPicker) {
+        setShowCatPicker(false);
+        return true;
+      }
+      return false;
+    };
+    const sub = BackHandler.addEventListener('hardwareBackPress', handleBack);
+    return () => sub.remove();
+  }, [showCatPicker]);
 
   const activeMeta = BILL_META[category];
 

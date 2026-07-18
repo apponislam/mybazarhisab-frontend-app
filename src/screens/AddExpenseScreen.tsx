@@ -11,6 +11,7 @@ import {
   FlatList,
   Image,
   Keyboard,
+  BackHandler,
 } from 'react-native';
 import { COLORS, SPACING, SIZES, SHADOWS } from '../constants/theme';
 import { ArrowLeft, Package, X, Calendar } from '../components/CustomIcon';
@@ -94,6 +95,18 @@ export default function AddExpenseScreen({ onBack, onDone }: AddExpenseScreenPro
   // RTK Query hooks
   const [searchProducts, { isFetching: isSearching }] = useLazySearchProductsQuery();
   const [createBazarEntry, { isLoading: isCreating }] = useCreateBazarEntryMutation();
+
+  useEffect(() => {
+    const handleBack = () => {
+      if (showDropdown) {
+        setShowDropdown(false);
+        return true;
+      }
+      return false;
+    };
+    const sub = BackHandler.addEventListener('hardwareBackPress', handleBack);
+    return () => sub.remove();
+  }, [showDropdown]);
 
   // Fetch products (called on focus and on text change)
   const fetchProducts = useCallback(async (searchTerm?: string, page: number = 1) => {
