@@ -1,4 +1,4 @@
-import { baseApi } from '../../api/baseApi';
+import { baseApi, TResponseMeta } from '../../api/baseApi';
 
 export interface CreateBazarEntryPayload {
   productId?: string;
@@ -53,15 +53,7 @@ export interface BazarEntriesQueryParams {
 export interface BazarEntriesResponse {
   success: boolean;
   message: string;
-  meta: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-    totalCost: number;
-    hasNext: boolean;
-    hasPrev: boolean;
-  };
+  meta: TResponseMeta;
   data: BazarEntryItem[];
 }
 

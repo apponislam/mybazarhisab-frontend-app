@@ -1,4 +1,4 @@
-import { baseApi } from '../../api/baseApi';
+import { baseApi, TResponseMeta } from '../../api/baseApi';
 import { BillCategory } from '../../../screens/BillsTab';
 
 export interface CreateBillPayload {
@@ -44,15 +44,7 @@ export interface BillsQueryParams {
 export interface BillsResponse {
   success: boolean;
   message: string;
-  meta: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-    totalAmount: number;
-    hasNext: boolean;
-    hasPrev: boolean;
-  };
+  meta: TResponseMeta;
   data: BillItem[];
 }
 

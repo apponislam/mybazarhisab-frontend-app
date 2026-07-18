@@ -4,6 +4,17 @@ import { BASE_URL } from '@env';
 import { RootState } from '../store';
 import { login, logout } from '../features/auth/authSlice';
 
+export interface TResponseMeta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  totalCost?: number;
+  totalAmount?: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
 interface RefreshTokenResponse {
   data: {
     accessToken: string;
