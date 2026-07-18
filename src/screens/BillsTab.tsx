@@ -32,13 +32,31 @@ import {
   MessageSquare,
 } from '../components/CustomIcon';
 import { MockUser, Avatar, FilterTabs, fmtFull } from './ExpensesTab';
+import MetaInfo from '../components/MetaInfo';
 import { useLazyGetBillsQuery } from '../redux/features/bill/billApi';
 
+
 export type BillCategory =
-  | 'RENT' | 'TRAVEL' | 'WIFI' | 'ELECTRICITY' | 'GAS' | 'WATER'
-  | 'MAID' | 'MAINTENANCE' | 'SUBSCRIPTION' | 'MOBILE' | 'MEDICAL'
-  | 'EDUCATION' | 'SHOPPING' | 'ENTERTAINMENT' | 'LAUNDRY' | 'LOAN_EMI'
-  | 'SALON_GROOMING' | 'GIFTS_FESTIVALS' | 'UTILITIES' | 'OTHERS';
+  | 'RENT'
+  | 'TRAVEL'
+  | 'WIFI'
+  | 'ELECTRICITY'
+  | 'GAS'
+  | 'WATER'
+  | 'MAID'
+  | 'MAINTENANCE'
+  | 'SUBSCRIPTION'
+  | 'MOBILE'
+  | 'MEDICAL'
+  | 'EDUCATION'
+  | 'SHOPPING'
+  | 'ENTERTAINMENT'
+  | 'LAUNDRY'
+  | 'LOAN_EMI'
+  | 'SALON_GROOMING'
+  | 'GIFTS_FESTIVALS'
+  | 'UTILITIES'
+  | 'OTHERS';
 
 export interface MockBill {
   id: string;
@@ -50,27 +68,135 @@ export interface MockBill {
   notes?: string;
 }
 
-export const BILL_META: Record<BillCategory, { label: string; icon: (props: any) => React.ReactNode; color: string; emoji: string }> = {
-  RENT:           { label: 'Rent',         icon: (p) => <Home {...p} />,           color: '#e8a020', emoji: '🏠' },
-  TRAVEL:         { label: 'Travel',       icon: (p) => <Car {...p} />,           color: '#3b82f6', emoji: '🚗' },
-  WIFI:           { label: 'Wi-Fi',        icon: (p) => <Wifi {...p} />,          color: '#06b6d4', emoji: '📶' },
-  ELECTRICITY:    { label: 'Electricity',  icon: (p) => <Zap {...p} />,           color: '#f59e0b', emoji: '⚡' },
-  GAS:            { label: 'Gas',          icon: (p) => <Flame {...p} />,          color: '#f97316', emoji: '🔥' },
-  WATER:          { label: 'Water',        icon: (p) => <Droplet {...p} />,        color: '#60a5fa', emoji: '💧' },
-  MAID:           { label: 'Maid',         icon: (p) => <Sparkles {...p} />,       color: '#a78bfa', emoji: '✨' },
-  MAINTENANCE:    { label: 'Maintenance',  icon: (p) => <Wrench {...p} />,         color: '#78716c', emoji: '🔧' },
-  SUBSCRIPTION:   { label: 'Subscription', icon: (p) => <CreditCard {...p} />,     color: '#ec4899', emoji: '💳' },
-  MOBILE:         { label: 'Mobile',       icon: (p) => <Phone {...p} />,          color: '#34d399', emoji: '📱' },
-  MEDICAL:        { label: 'Medical',      icon: (p) => <Heart {...p} />,          color: '#f43f5e', emoji: '❤️' },
-  EDUCATION:      { label: 'Education',    icon: (p) => <GraduationCap {...p} />,   color: '#8b5cf6', emoji: '🎓' },
-  SHOPPING:       { label: 'Shopping',     icon: (p) => <ShoppingBag {...p} />,     color: '#c06010', emoji: '🛍️' },
-  ENTERTAINMENT:  { label: 'Entertainment',icon: (p) => <Tv {...p} />,             color: '#6366f1', emoji: '📺' },
-  LAUNDRY:        { label: 'Laundry',      icon: (p) => <Shirt {...p} />,          color: '#14b8a6', emoji: '👕' },
-  LOAN_EMI:       { label: 'Loan / EMI',   icon: (p) => <TrendingUp {...p} />,     color: '#ef4444', emoji: '💵' },
-  SALON_GROOMING: { label: 'Salon',        icon: (p) => <Scissors {...p} />,       color: '#d946ef', emoji: '✂️' },
-  GIFTS_FESTIVALS:{ label: 'Gifts',        icon: (p) => <Gift {...p} />,           color: '#f59e0b', emoji: '🎁' },
-  UTILITIES:      { label: 'Utilities',    icon: (p) => <Settings {...p} />,       color: '#94a3b8', emoji: '⚙️' },
-  OTHERS:         { label: 'Others',       icon: (p) => <MessageSquare {...p} />,  color: '#64748b', emoji: '💬' },
+export const BILL_META: Record<
+  BillCategory,
+  {
+    label: string;
+    icon: (props: any) => React.ReactNode;
+    color: string;
+    emoji: string;
+  }
+> = {
+  RENT: {
+    label: 'Rent',
+    icon: p => <Home {...p} />,
+    color: '#e8a020',
+    emoji: '🏠',
+  },
+  TRAVEL: {
+    label: 'Travel',
+    icon: p => <Car {...p} />,
+    color: '#3b82f6',
+    emoji: '🚗',
+  },
+  WIFI: {
+    label: 'Wi-Fi',
+    icon: p => <Wifi {...p} />,
+    color: '#06b6d4',
+    emoji: '📶',
+  },
+  ELECTRICITY: {
+    label: 'Electricity',
+    icon: p => <Zap {...p} />,
+    color: '#f59e0b',
+    emoji: '⚡',
+  },
+  GAS: {
+    label: 'Gas',
+    icon: p => <Flame {...p} />,
+    color: '#f97316',
+    emoji: '🔥',
+  },
+  WATER: {
+    label: 'Water',
+    icon: p => <Droplet {...p} />,
+    color: '#60a5fa',
+    emoji: '💧',
+  },
+  MAID: {
+    label: 'Maid',
+    icon: p => <Sparkles {...p} />,
+    color: '#a78bfa',
+    emoji: '✨',
+  },
+  MAINTENANCE: {
+    label: 'Maintenance',
+    icon: p => <Wrench {...p} />,
+    color: '#78716c',
+    emoji: '🔧',
+  },
+  SUBSCRIPTION: {
+    label: 'Subscription',
+    icon: p => <CreditCard {...p} />,
+    color: '#ec4899',
+    emoji: '💳',
+  },
+  MOBILE: {
+    label: 'Mobile',
+    icon: p => <Phone {...p} />,
+    color: '#34d399',
+    emoji: '📱',
+  },
+  MEDICAL: {
+    label: 'Medical',
+    icon: p => <Heart {...p} />,
+    color: '#f43f5e',
+    emoji: '❤️',
+  },
+  EDUCATION: {
+    label: 'Education',
+    icon: p => <GraduationCap {...p} />,
+    color: '#8b5cf6',
+    emoji: '🎓',
+  },
+  SHOPPING: {
+    label: 'Shopping',
+    icon: p => <ShoppingBag {...p} />,
+    color: '#c06010',
+    emoji: '🛍️',
+  },
+  ENTERTAINMENT: {
+    label: 'Entertainment',
+    icon: p => <Tv {...p} />,
+    color: '#6366f1',
+    emoji: '📺',
+  },
+  LAUNDRY: {
+    label: 'Laundry',
+    icon: p => <Shirt {...p} />,
+    color: '#14b8a6',
+    emoji: '👕',
+  },
+  LOAN_EMI: {
+    label: 'Loan / EMI',
+    icon: p => <TrendingUp {...p} />,
+    color: '#ef4444',
+    emoji: '💵',
+  },
+  SALON_GROOMING: {
+    label: 'Salon',
+    icon: p => <Scissors {...p} />,
+    color: '#d946ef',
+    emoji: '✂️',
+  },
+  GIFTS_FESTIVALS: {
+    label: 'Gifts',
+    icon: p => <Gift {...p} />,
+    color: '#f59e0b',
+    emoji: '🎁',
+  },
+  UTILITIES: {
+    label: 'Utilities',
+    icon: p => <Settings {...p} />,
+    color: '#94a3b8',
+    emoji: '⚙️',
+  },
+  OTHERS: {
+    label: 'Others',
+    icon: p => <MessageSquare {...p} />,
+    color: '#64748b',
+    emoji: '💬',
+  },
 };
 
 export const BILL_CATEGORIES = Object.entries(BILL_META).map(([k, v]) => ({
@@ -87,10 +213,28 @@ function formatDateDisplay(dateStr: string): string {
     d.getMonth() === today.getMonth() &&
     d.getDate() === today.getDate();
 
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
   const dayStr = `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
 
-  return isToday ? `Today, ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : dayStr;
+  return isToday
+    ? `Today, ${d.toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+      })}`
+    : dayStr;
 }
 
 function mapApiToMockBill(item: any): MockBill {
@@ -118,7 +262,7 @@ interface BillRowProps {
 }
 
 export function BillRow({ bill, onClick }: BillRowProps) {
-  const meta = BILL_META[bill.category];
+  const meta = BILL_META[bill.category] || { label: 'Other', icon: null, color: '#64748b' };
   return (
     <TouchableOpacity
       onPress={onClick}
@@ -129,21 +273,29 @@ export function BillRow({ bill, onClick }: BillRowProps) {
         <Text style={styles.billTitle}>{bill.title}</Text>
         <View style={styles.userRow}>
           <Avatar user={bill.user} size={16} />
-          <Text style={styles.userName} numberOfLines={1}>{bill.user.name}</Text>
+          <Text style={styles.userName} numberOfLines={1}>
+            {bill.user.name}
+          </Text>
         </View>
         <View style={styles.badgeRow}>
-          <MetaInfo
-            label={meta.label}
-            icon={meta.icon({ color: meta.color, size: 22 })}
-            color={meta.color}
-          />
+            {meta ? (
+              <MetaInfo
+                label={meta.label}
+                icon={meta.icon ? meta.icon({ color: meta.color, size: 22 }) : null}
+                color={meta.color}
+              />
+            ) : null}
           <Text style={styles.dateText}>{bill.date}</Text>
         </View>
       </View>
 
       <View style={styles.rightInfo}>
         <Text style={styles.amountText}>{fmtFull(bill.amount)}</Text>
-        <ChevronRight color={COLORS.textSecondary} size={14} style={{ marginTop: 2 }} />
+        <ChevronRight
+          color={COLORS.textSecondary}
+          size={14}
+          style={{ marginTop: 2 }}
+        />
       </View>
     </TouchableOpacity>
   );
@@ -154,7 +306,10 @@ interface BillsTabProps {
   onDetail: (b: MockBill) => void;
 }
 
-export default function BillsTab({ bills: propBills, onDetail }: BillsTabProps) {
+export default function BillsTab({
+  bills: propBills,
+  onDetail,
+}: BillsTabProps) {
   const [filter, setFilter] = useState<'month' | 'all'>('month');
   const [billsList, setBillsList] = useState<MockBill[]>([]);
   const [page, setPage] = useState(1);
@@ -164,7 +319,10 @@ export default function BillsTab({ bills: propBills, onDetail }: BillsTabProps) 
 
   const [triggerGetBills, { isFetching, isLoading }] = useLazyGetBillsQuery();
 
-  const loadData = async (targetPage: number, isRefreshing: boolean = false) => {
+  const loadData = async (
+    targetPage: number,
+    isRefreshing: boolean = false,
+  ) => {
     try {
       const params: any = {
         page: targetPage,
@@ -180,7 +338,7 @@ export default function BillsTab({ bills: propBills, onDetail }: BillsTabProps) 
         if (isRefreshing || targetPage === 1) {
           setBillsList(mapped);
         } else {
-          setBillsList((prev) => [...prev, ...mapped]);
+          setBillsList(prev => [...prev, ...mapped]);
         }
         setHasNext(result.meta?.hasNext || false);
         setPage(targetPage);
@@ -234,8 +392,22 @@ export default function BillsTab({ bills: propBills, onDetail }: BillsTabProps) 
           Group <Text style={{ color: COLORS.accent }}>Bills</Text>
         </Text>
         <Text style={styles.headerSubtitle}>
-          {totalItems} bills · <Text style={{ color: COLORS.accent, fontWeight: 'bold', fontFamily: 'monospace' }}>{fmtFull(totalAmount || 0)}</Text>
-          {filter === 'month' && <Text style={{ color: COLORS.textSecondary }}> in {currentMonthName}</Text>}
+          {totalItems} bills ·{' '}
+          <Text
+            style={{
+              color: COLORS.accent,
+              fontWeight: 'bold',
+              fontFamily: 'monospace',
+            }}
+          >
+            {fmtFull(totalAmount || 0)}
+          </Text>
+          {filter === 'month' && (
+            <Text style={{ color: COLORS.textSecondary }}>
+              {' '}
+              in {currentMonthName}
+            </Text>
+          )}
         </Text>
       </View>
 
@@ -245,7 +417,7 @@ export default function BillsTab({ bills: propBills, onDetail }: BillsTabProps) 
       {/* List */}
       <FlatList
         data={billsList}
-        keyExtractor={(item) => item.id}
+        keyExtractor={item => item.id}
         renderItem={({ item }) => (
           <BillRow bill={item} onClick={() => onDetail(item)} />
         )}
@@ -259,7 +431,9 @@ export default function BillsTab({ bills: propBills, onDetail }: BillsTabProps) 
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyEmoji}>📄</Text>
             <Text style={styles.emptyText}>
-              {filter === 'month' ? `No bills logged in ${currentMonthName}` : 'No bills logged yet'}
+              {filter === 'month'
+                ? `No bills logged in ${currentMonthName}`
+                : 'No bills logged yet'}
             </Text>
           </View>
         }

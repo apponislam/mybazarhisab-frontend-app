@@ -5,8 +5,8 @@ import { SHADOWS } from '../constants/theme';
 export interface MetaInfoProps {
   /** Display label */
   label: string;
-  /** Icon component, typically a function returning a ReactNode */
-  icon: React.ReactNode;
+  /** Optional icon component, can be a ReactNode or null */
+  icon?: React.ReactNode;
   /** Base color (hex) used for background and border tints */
   color: string;
   /** Optional press handler – makes the whole chip touchable */
@@ -44,7 +44,7 @@ export default function MetaInfo({ label, icon, color, onPress, elevated = false
       activeOpacity={0.8}
       onPress={onPress}
     >
-      <View style={styles.iconWrapper}>{icon}</View>
+      {icon && <View style={styles.iconWrapper}>{icon}</View>}
       <Text style={[styles.label, { color }]}>{label}</Text>
     </Container>
   );
