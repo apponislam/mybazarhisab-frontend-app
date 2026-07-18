@@ -147,7 +147,7 @@ export default function GroupDetailsScreen({ onBack }: GroupDetailsScreenProps) 
                   style={styles.editNameBtn}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.editText}>📝 Edit</Text>
+                  <Text style={styles.editText}>Edit</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -165,7 +165,7 @@ export default function GroupDetailsScreen({ onBack }: GroupDetailsScreenProps) 
                   {isRegeneratingCode ? (
                     <ActivityIndicator size="small" color={COLORS.primary} />
                   ) : (
-                    <Text style={styles.regenText}>🔄 Refresh</Text>
+                    <Text style={styles.regenText}>Generate New</Text>
                   )}
                 </TouchableOpacity>
               )}
