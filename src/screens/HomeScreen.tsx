@@ -299,7 +299,9 @@ export default function HomeScreen() {
   }
 
   // Get active stats object dynamically calculated
-  const activeStats = dashboardData?.data || calculateStats(groupStats.groupName);
+  const activeStats = dashboardData?.data
+    ? { ...dashboardData.data, groupName: groupStats?.groupName || myGroupData?.data?.name || 'My Group' }
+    : calculateStats(groupStats?.groupName || 'My Group');
 
   // Render Gate 2: Detail or Edit screens
   if (subScreen === 'expense-detail' && selectedEntry) {
