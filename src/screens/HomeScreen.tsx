@@ -396,6 +396,28 @@ export default function HomeScreen() {
 
   // Helper calculation update to pass updated totals into Group stats dynamically
   const calculateStats = (groupName: string): GroupStats => {
+    if (!dashboardData) {
+      return {
+        groupName,
+        totalMembers: 0,
+        totalGroupBazarAndBills: 0,
+        totalMyBazarAndBills: 0,
+        totalNewProductsCreatedByMe: 0,
+        thisMonthBazarExpense: 0,
+        prevMonthBazarExpense: 0,
+        thisYearBazarExpense: 0,
+        prevYearBazarExpense: 0,
+        thisMonthBillExpense: 0,
+        prevMonthBillExpense: 0,
+        thisYearBillExpense: 0,
+        prevYearBillExpense: 0,
+        thisMonthTotalExpense: 0,
+        prevMonthTotalExpense: 0,
+        thisYearTotalExpense: 0,
+        prevYearTotalExpense: 0,
+      };
+    }
+
     const totalBazar =
       statsData?.data?.totalAmount ??
       entries.reduce((s, e) => s + e.price * e.quantity, 0);
@@ -403,8 +425,6 @@ export default function HomeScreen() {
 
     // My Bazar entries
     const myEntries = entries.filter(e => e.user.id === myUserId);
-    // const myBazarExpense = myEntries.reduce((s, e) => s + e.price * e.quantity, 0);
-    // const myBillExpense = bills.filter((b) => b.user.id === myUserId).reduce((s, b) => s + b.amount, 0);
 
     return {
       groupName,
@@ -415,17 +435,17 @@ export default function HomeScreen() {
         myEntries.length + bills.filter(b => b.user.id === myUserId).length,
       totalNewProductsCreatedByMe: 8,
       thisMonthBazarExpense: totalBazar,
-      prevMonthBazarExpense: 10950,
-      thisYearBazarExpense: totalBazar + 85000,
-      prevYearBazarExpense: 87200,
+      prevMonthBazarExpense: 0,
+      thisYearBazarExpense: totalBazar,
+      prevYearBazarExpense: 0,
       thisMonthBillExpense: totalBill,
-      prevMonthBillExpense: 5100,
-      thisYearBillExpense: totalBill + 39000,
-      prevYearBillExpense: 39800,
+      prevMonthBillExpense: 0,
+      thisYearBillExpense: totalBill,
+      prevYearBillExpense: 0,
       thisMonthTotalExpense: totalBazar + totalBill,
-      prevMonthTotalExpense: 16050,
-      thisYearTotalExpense: totalBazar + totalBill + 124000,
-      prevYearTotalExpense: 127000,
+      prevMonthTotalExpense: 0,
+      thisYearTotalExpense: totalBazar + totalBill,
+      prevYearTotalExpense: 0,
     };
   };
 
