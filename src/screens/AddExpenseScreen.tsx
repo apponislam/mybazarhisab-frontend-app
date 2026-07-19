@@ -18,6 +18,7 @@ import { ArrowLeft, Package, X, Calendar } from '../components/CustomIcon';
 import { MockBazarEntry, BazarUnit } from './ExpensesTab';
 import { useLazySearchProductsQuery, ProductItem } from '../redux/features/product/productApi';
 import { useCreateBazarEntryMutation } from '../redux/features/bazarEntry/bazarEntryApi';
+import CustomDatePicker from '../components/CustomDatePicker';
 
 interface AddExpenseScreenProps {
   onBack: () => void;
@@ -70,12 +71,12 @@ export default function AddExpenseScreen({ onBack, onDone }: AddExpenseScreenPro
   const [quantity, setQuantity] = useState('');
   const [unit, setUnit] = useState<BazarUnit>('KG');
   const [date, setDate] = useState(new Date()); // defaults to today
-  const [dateText, setDateText] = useState(formatDateYMD(new Date()));
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
 
   // Search dropdown state
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [searchPage, setSearchPage] = useState(1);
   const [allProducts, setAllProducts] = useState<ProductItem[]>([]);
   const [hasMore, setHasMore] = useState(false);
@@ -86,7 +87,6 @@ export default function AddExpenseScreen({ onBack, onDone }: AddExpenseScreenPro
   const [fPrice, setFPrice] = useState(false);
   const [fQty, setFQty] = useState(false);
   const [fNotes, setFNotes] = useState(false);
-  const [fDate, setFDate] = useState(false);
 
   // Debounce timer ref
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -102,11 +102,15 @@ export default function AddExpenseScreen({ onBack, onDone }: AddExpenseScreenPro
         setShowDropdown(false);
         return true;
       }
+      if (showDatePicker) {
+        setShowDatePicker(false);
+        return true;
+      }
       return false;
     };
     const sub = BackHandler.addEventListener('hardwareBackPress', handleBack);
     return () => sub.remove();
-  }, [showDropdown]);
+  }, [showDropdown, showDatePicker]);
 
   // Fetch products (called on focus and on text change)
   const fetchProducts = useCallback(async (searchTerm?: string, page: number = 1) => {
@@ -191,15 +195,7 @@ export default function AddExpenseScreen({ onBack, onDone }: AddExpenseScreenPro
     setShowDropdown(false);
   };
 
-  // Handle date text change — validate and parse YYYY-MM-DD
-  const handleDateChange = (text: string) => {
-    setDateText(text);
-    // Try to parse the date
-    const parsed = new Date(text);
-    if (!isNaN(parsed.getTime()) && text.length === 10) {
-      setDate(parsed);
-    }
-  };
+
 
   // Submit handler — POST to API
   const handleSubmit = async () => {
@@ -485,19 +481,16 @@ export default function AddExpenseScreen({ onBack, onDone }: AddExpenseScreenPro
           {/* Date Field */}
           <View style={styles.fieldBox}>
             <Text style={styles.fieldLabel}>Date</Text>
-            <View style={[styles.inputWrapper, fDate && styles.inputWrapperFocused]}>
+            <TouchableOpacity
+              onPress={() => setShowDatePicker(true)}
+              style={styles.inputWrapper}
+              activeOpacity={0.8}
+            >
               <Calendar color={COLORS.textSecondary} size={18} style={styles.fieldIcon} />
-              <TextInput
-                style={styles.textInput}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor={COLORS.placeholder}
-                value={dateText}
-                onChangeText={handleDateChange}
-                onFocus={() => setFDate(true)}
-                onBlur={() => setFDate(false)}
-              />
-            </View>
-            <Text style={styles.dateHint}>{formatDateDisplay(date)}</Text>
+              <Text style={{ flex: 1, color: COLORS.text, fontSize: 15, fontFamily: 'sans-serif' }}>
+                {formatDateDisplay(date)}
+              </Text>
+            </TouchableOpacity>
           </View>
 
           {/* Notes (Optional) */}
@@ -534,6 +527,14 @@ export default function AddExpenseScreen({ onBack, onDone }: AddExpenseScreenPro
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* Date Picker Modal */}
+      <CustomDatePicker
+        visible={showDatePicker}
+        value={date}
+        onClose={() => setShowDatePicker(false)}
+        onChange={(selected) => setDate(selected)}
+      />
     </View>
   );
 }

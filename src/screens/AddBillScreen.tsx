@@ -15,6 +15,7 @@ import { COLORS, SPACING, SIZES, SHADOWS } from '../constants/theme';
 import { ArrowLeft, X, Plus, Calendar } from '../components/CustomIcon';
 import { MockBill, BillCategory, BILL_CATEGORIES, BILL_META } from './BillsTab';
 import { useCreateBillMutation } from '../redux/features/bill/billApi';
+import CustomDatePicker from '../components/CustomDatePicker';
 
 interface AddBillScreenProps {
   onBack: () => void;
@@ -48,17 +49,16 @@ export default function AddBillScreen({ onBack, onDone }: AddBillScreenProps) {
   const [title, setTitle] = useState('');
   const [amount, setAmount] = useState('');
   const [date, setDate] = useState(new Date());
-  const [dateText, setDateText] = useState(formatDateYMD(new Date()));
   const [notes, setNotes] = useState('');
   
   const [loading, setLoading] = useState(false);
   const [showCatPicker, setShowCatPicker] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   // Focus States
   const [fTitle, setFTitle] = useState(false);
   const [fAmount, setFAmount] = useState(false);
   const [fNotes, setFNotes] = useState(false);
-  const [fDate, setFDate] = useState(false);
 
   // RTK Query hook
   const [createBill, { isLoading: isCreating }] = useCreateBillMutation();
@@ -69,22 +69,17 @@ export default function AddBillScreen({ onBack, onDone }: AddBillScreenProps) {
         setShowCatPicker(false);
         return true;
       }
+      if (showDatePicker) {
+        setShowDatePicker(false);
+        return true;
+      }
       return false;
     };
     const sub = BackHandler.addEventListener('hardwareBackPress', handleBack);
     return () => sub.remove();
-  }, [showCatPicker]);
+  }, [showCatPicker, showDatePicker]);
 
   const activeMeta = BILL_META[category];
-
-  // Handle date text change
-  const handleDateChange = (text: string) => {
-    setDateText(text);
-    const parsed = new Date(text);
-    if (!isNaN(parsed.getTime()) && text.length === 10) {
-      setDate(parsed);
-    }
-  };
 
   const handleSubmit = async () => {
     if (!title.trim() || !amount) return;
@@ -212,19 +207,16 @@ export default function AddBillScreen({ onBack, onDone }: AddBillScreenProps) {
           {/* Date Field */}
           <View style={styles.fieldBox}>
             <Text style={styles.fieldLabel}>Date</Text>
-            <View style={[styles.inputWrapper, fDate && styles.inputWrapperFocused]}>
+            <TouchableOpacity
+              onPress={() => setShowDatePicker(true)}
+              style={styles.inputWrapper}
+              activeOpacity={0.8}
+            >
               <Calendar color={COLORS.textSecondary} size={18} style={styles.fieldIcon} />
-              <TextInput
-                style={styles.textInput}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor={COLORS.placeholder}
-                value={dateText}
-                onChangeText={handleDateChange}
-                onFocus={() => setFDate(true)}
-                onBlur={() => setFDate(false)}
-              />
-            </View>
-            <Text style={styles.dateHint}>{formatDateDisplay(date)}</Text>
+              <Text style={{ flex: 1, color: COLORS.text, fontSize: 15, fontFamily: 'sans-serif' }}>
+                {formatDateDisplay(date)}
+              </Text>
+            </TouchableOpacity>
           </View>
 
           {/* Notes (Optional) */}
@@ -327,6 +319,14 @@ export default function AddBillScreen({ onBack, onDone }: AddBillScreenProps) {
           </View>
         </TouchableOpacity>
       </Modal>
+
+      {/* Date Picker Modal */}
+      <CustomDatePicker
+        visible={showDatePicker}
+        value={date}
+        onClose={() => setShowDatePicker(false)}
+        onChange={(selected) => setDate(selected)}
+      />
     </View>
   );
 }
